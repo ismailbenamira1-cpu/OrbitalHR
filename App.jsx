@@ -893,9 +893,9 @@ export default function App() {
               <tr>
                 <th className="px-4 py-3">Employee & Home</th>
                 <th className="px-4 py-3">Host Destination</th>
-                <th className="px-4 py-3">Feature #7: Stay & Visa</th>
-                <th className="px-4 py-3">Feature #2: PE & Tax</th>
-                <th className="px-4 py-3">Feature #1: Social Security</th>
+                <th className="px-4 py-3">Pillar 6: Visa & Stay</th>
+                <th className="px-4 py-3">Pillar 2: PE & Tax</th>
+                <th className="px-4 py-3">Pillar 1: Social Security</th>
                 <th className="px-4 py-3">Graduation Action</th>
                 <th className="px-4 py-3 text-right">Manage</th>
               </tr>
@@ -999,7 +999,7 @@ export default function App() {
           <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-white p-6 lg:grid-cols-3">
             <div className="space-y-2 border-b border-slate-100 pb-4 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-indigo-600">
-                <Globe className="h-4 w-4" /> Feature #7: Immigration & Stay Rule
+                <Globe className="h-4 w-4" /> Pillar 6: Visa & Right-to-Work Tracking
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.visaRuleShort}</p>
               <p className="text-xs text-slate-600">Pathway: {selectedEmployee.rule.visaPathway}</p>
@@ -1007,7 +1007,7 @@ export default function App() {
 
             <div className="space-y-2 border-b border-slate-100 pb-4 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-rose-600">
-                <ShieldAlert className="h-4 w-4" /> Feature #2: Tax Residency & PE Trigger
+                <ShieldAlert className="h-4 w-4" /> Pillar 2: PE Tax Escrow & Overstay Shield
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.taxRuleShort}</p>
               <p className="text-xs text-slate-600">
@@ -1017,7 +1017,7 @@ export default function App() {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-emerald-700">
-                <FileCheck2 className="h-4 w-4" /> Feature #1: Bilateral Social Security
+                <FileCheck2 className="h-4 w-4" /> Pillar 1: Social Security & A1 Certificate
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.ssInfo.form}</p>
               <p className="text-xs text-slate-600">{selectedEmployee.ssInfo.note}</p>
@@ -1025,12 +1025,12 @@ export default function App() {
           </div>
         )}
 
-        {/* Upcoming Enterprise Compliance Pillars Roadmap */}
+        {/* Upcoming Enterprise Compliance Pillars Roadmap (Pillars 3, 4, 5, 7) */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                <Clock className="h-3.5 w-3.5" /> Roadmap 2026–2027
+                <Clock className="h-3.5 w-3.5" /> Roadmap 2026–2027 (7-Pillar Stack)
               </span>
               <h2 className="text-lg font-bold text-slate-900 mt-1">
                 Upcoming Enterprise Compliance Pillars
@@ -1044,7 +1044,7 @@ export default function App() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 4</span>
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 3</span>
                 <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Dual Income Tax Withholding & Shadow Payroll</h3>
@@ -1055,7 +1055,7 @@ export default function App() {
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 5</span>
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 4</span>
                 <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Posted Worker Notifications (PWN)</h3>
@@ -1066,7 +1066,7 @@ export default function App() {
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 6</span>
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 5</span>
                 <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Local Labor & Wage Rules</h3>
@@ -1077,7 +1077,7 @@ export default function App() {
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 9</span>
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 7</span>
                 <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">GDPR Data Sovereignty Guardrail</h3>
