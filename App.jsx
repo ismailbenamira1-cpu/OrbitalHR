@@ -16,6 +16,7 @@ import {
   LogOut,
   Database,
   Building2,
+  Clock,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
@@ -1023,6 +1024,69 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* Upcoming Enterprise Compliance Pillars Roadmap */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
+                <Clock className="h-3.5 w-3.5" /> Roadmap 2026–2027
+              </span>
+              <h2 className="text-lg font-bold text-slate-900 mt-1">
+                Upcoming Enterprise Compliance Pillars
+              </h2>
+              <p className="text-xs text-slate-500">
+                Advanced cross-border modules currently in closed beta for enterprise accounts (500+ employees).
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 4</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Dual Income Tax Withholding & Shadow Payroll</h3>
+              <p className="text-xs text-slate-600">
+                Calculates cross-border tax liabilities and outputs clean data payloads for ADP & Workday integration.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 5</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Posted Worker Notifications (PWN)</h3>
+              <p className="text-xs text-slate-600">
+                Generates pre-filled labor declaration drafts for European Ministries of Labour (e.g. France SIPSI) to block fines.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 6</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">Local Labor & Wage Rules</h3>
+              <p className="text-xs text-slate-600">
+                Audits working logs against host-country thresholds (minimum wage, max working hours) to prevent violations.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 9</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">GDPR Data Sovereignty Guardrail</h3>
+              <p className="text-xs text-slate-600">
+                Cross-references physical telemetry with GDPR Article 44 to flag restricted file access from high-risk zones.
+              </p>
+            </div>
+          </div>
+        </div>
 
         {/* Legal Disclaimer */}
         <footer className="rounded-xl border border-slate-200 bg-slate-100/80 px-5 py-4 text-xs text-slate-500">
