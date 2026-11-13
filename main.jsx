@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
-import './index.css' // <-- This line connects your Tailwind styles
+import './index.css' // Essential for Tailwind layout and colors
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
