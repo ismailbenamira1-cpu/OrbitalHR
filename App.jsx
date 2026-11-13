@@ -229,7 +229,6 @@ const DEFAULT_EMPLOYEES = [
 function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const rule = HOST_RULES[emp.hostRegion] || HOST_RULES['Schengen Area'];
 
-  // 1. Calculate aggregated regional headcount across all employees in this host region
   const regionalHeadcount = allEmployees.filter(
     (e) => e.hostRegion === emp.hostRegion
   ).length;
@@ -249,13 +248,17 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
 
   const ssInfo = emp.homeCountry === 'Canada' ? rule.caSocialSecurity : rule.usSocialSecurity;
 
-  // 2. Corporate EOR vs Entity Graduation Threshold (e.g. 5 hires break-even)
-  const eorGraduationThreshold = 5; 
+  const eorGraduationThreshold = 5;
   const shouldGraduateToEntity = regionalHeadcount >= eorGraduationThreshold;
 
   let recommendation = 'Stay on Home Payroll';
-  if (shouldGraduateToEntity || emp.daysUsed > rule.taxResidencyDays || emp.currentSetup === 'EOR ($599/mo)' || peRisk === 'CRITICAL') {
-    recommendation = shouldGraduateToEntity && regionalHeadcount >= eorGraduationThreshold
+  if (
+    shouldGraduateToEntity ||
+    emp.daysUsed > rule.taxResidencyDays ||
+    emp.currentSetup === 'EOR ($599/mo)' ||
+    peRisk === 'CRITICAL'
+  ) {
+    recommendation = shouldGraduateToEntity
       ? `Graduate to Local Entity (${regionalHeadcount} hires in region)`
       : 'Graduate to Local Payroll';
   } else if (isCliffAlert) {
@@ -264,8 +267,9 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
 
   const annualEorCost = eorMonthlyFee * 12;
   const annualOrbitalLocalCost = (orbitalMonthlyFee + rule.localPayrollMonthlyUSD) * 12;
-  const annualSavingsVsEor =
-    recommendation.includes('Graduate') ? Math.max(0, annualEorCost - annualOrbitalLocalCost) : 0;
+  const annualSavingsVsEor = recommendation.startsWith('Graduate')
+    ? Math.max(0, annualEorCost - annualOrbitalLocalCost)
+    : 0;
 
   return {
     ...emp,
@@ -296,7 +300,6 @@ export default function App() {
   const [eorFee, setEorFee] = useState(599);
   const [orbitalFee, setOrbitalFee] = useState(55);
 
-  // Add / Edit Employee Form
   const [showEmpForm, setShowEmpForm] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState(null);
   const [empForm, setEmpForm] = useState({
@@ -308,7 +311,6 @@ export default function App() {
     currentSetup: 'Home Payroll',
   });
 
-  // Early Access Lead Form
   const [leadForm, setLeadForm] = useState({
     work_email: '',
     company_name: '',
@@ -317,7 +319,6 @@ export default function App() {
   });
   const [leadMessage, setLeadMessage] = useState('');
 
-  // Listen to Supabase Auth
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
@@ -329,7 +330,6 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Load user's saved roster from Supabase when logged in
   useEffect(() => {
     if (!supabase || !session?.user) return;
     supabase
@@ -354,13 +354,13 @@ export default function App() {
   }, [session]);
 
   const evaluated = useMemo(
-    () => employees.map((e) => evaluateEmployee(e, employee, eorFee, orbitalFee)),
+    () => employees.map((e) => evaluateEmployee(e, employees, eorFee, orbitalFee)),
     [employees, eorFee, orbitalFee]
   );
 
   const filteredEmployees = useMemo(() => {
     if (filterMode === 'CLIFF') return evaluated.filter((e) => e.isCliffAlert);
-    if (filterMode === 'GRADUATE') return evaluated.filter((e) => e.recommendation === 'Graduate to Local Payroll');
+    if (filterMode === 'GRADUATE') return evaluated.filter((e) => e.recommendation.startsWith('Graduate'));
     if (filterMode === 'PE') return evaluated.filter((e) => e.peRisk !== 'LOW');
     return evaluated;
   }, [evaluated, filterMode]);
@@ -368,7 +368,7 @@ export default function App() {
   const kpis = useMemo(() => {
     const cliffCount = evaluated.filter((e) => e.isCliffAlert).length;
     const peHighCount = evaluated.filter((e) => e.peRisk !== 'LOW').length;
-    const graduateCount = evaluated.filter((e) => e.recommendation === 'Graduate to Local Payroll').length;
+    const graduateCount = evaluated.filter((e) => e.recommendation.startsWith('Graduate')).length;
     const totalAnnualSavings = evaluated.reduce((sum, e) => sum + e.annualSavingsVsEor, 0);
     return { cliffCount, peHighCount, graduateCount, totalAnnualSavings };
   }, [evaluated]);
@@ -898,7 +898,7 @@ export default function App() {
                   <td className="px-4 py-3.5">
                     <span
                       className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                        emp.recommendation === 'Graduate to Local Payroll'
+                        emp.recommendation.startsWith('Graduate')
                           ? 'bg-indigo-600 text-white'
                           : emp.recommendation === 'Extend Visa / Prepare Graduation'
                           ? 'bg-amber-500 text-white'
