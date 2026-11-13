@@ -226,8 +226,14 @@ const DEFAULT_EMPLOYEES = [
   },
 ];
 
-function evaluateEmployee(emp, eorMonthlyFee, orbitalMonthlyFee) {
+function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const rule = HOST_RULES[emp.hostRegion] || HOST_RULES['Schengen Area'];
+
+  // 1. Calculate aggregated regional headcount across all employees in this host region
+  const regionalHeadcount = allEmployees.filter(
+    (e) => e.hostRegion === emp.hostRegion
+  ).length;
+
   const visaDaysLeft = rule.visaLimitDays - emp.daysUsed;
   const taxDaysLeft = rule.taxResidencyDays - emp.daysUsed;
   const minDaysToCliff = Math.min(visaDaysLeft, taxDaysLeft);
@@ -237,15 +243,21 @@ function evaluateEmployee(emp, eorMonthlyFee, orbitalMonthlyFee) {
   let peRisk = 'LOW';
   if (emp.daysUsed >= rule.taxResidencyDays || (isRevenueOrExec && emp.daysUsed >= 60)) {
     peRisk = 'CRITICAL';
-  } else if (emp.daysUsed >= 90 || isRevenueOrExec || rule.peBaseRisk === 'High' && emp.daysUsed >= 60) {
+  } else if (emp.daysUsed >= 90 || isRevenueOrExec || (rule.peBaseRisk === 'High' && emp.daysUsed >= 60)) {
     peRisk = 'ELEVATED';
   }
 
   const ssInfo = emp.homeCountry === 'Canada' ? rule.caSocialSecurity : rule.usSocialSecurity;
 
+  // 2. Corporate EOR vs Entity Graduation Threshold (e.g. 5 hires break-even)
+  const eorGraduationThreshold = 5; 
+  const shouldGraduateToEntity = regionalHeadcount >= eorGraduationThreshold;
+
   let recommendation = 'Stay on Home Payroll';
-  if (emp.daysUsed > rule.taxResidencyDays || emp.currentSetup === 'EOR ($599/mo)' || peRisk === 'CRITICAL') {
-    recommendation = 'Graduate to Local Payroll';
+  if (shouldGraduateToEntity || emp.daysUsed > rule.taxResidencyDays || emp.currentSetup === 'EOR ($599/mo)' || peRisk === 'CRITICAL') {
+    recommendation = shouldGraduateToEntity && regionalHeadcount >= eorGraduationThreshold
+      ? `Graduate to Local Entity (${regionalHeadcount} hires in region)`
+      : 'Graduate to Local Payroll';
   } else if (isCliffAlert) {
     recommendation = 'Extend Visa / Prepare Graduation';
   }
@@ -253,11 +265,12 @@ function evaluateEmployee(emp, eorMonthlyFee, orbitalMonthlyFee) {
   const annualEorCost = eorMonthlyFee * 12;
   const annualOrbitalLocalCost = (orbitalMonthlyFee + rule.localPayrollMonthlyUSD) * 12;
   const annualSavingsVsEor =
-    recommendation === 'Graduate to Local Payroll' ? Math.max(0, annualEorCost - annualOrbitalLocalCost) : 0;
+    recommendation.includes('Graduate') ? Math.max(0, annualEorCost - annualOrbitalLocalCost) : 0;
 
   return {
     ...emp,
     rule,
+    regionalHeadcount,
     visaDaysLeft,
     taxDaysLeft,
     minDaysToCliff,
@@ -341,7 +354,7 @@ export default function App() {
   }, [session]);
 
   const evaluated = useMemo(
-    () => employees.map((e) => evaluateEmployee(e, eorFee, orbitalFee)),
+    () => employees.map((e) => evaluateEmployee(e, employee, eorFee, orbitalFee)),
     [employees, eorFee, orbitalFee]
   );
 
