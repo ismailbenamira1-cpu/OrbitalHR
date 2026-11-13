@@ -643,8 +643,58 @@ export default function App() {
         </div>
       </section>
 
+      {/* Enterprise Trust & Verification Bar */}
+      <div className="border-b border-slate-200 bg-white py-3 shadow-sm">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-around gap-6 px-6 text-xs font-medium text-slate-600">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <span>Verified 2026 Global Tax & Visa Rules (7 Corridors)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FileCheck2 className="h-4 w-4 text-indigo-600" />
+            <span>US Totalization & CRA CPT Form Automation</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-amber-600" />
+            <span>Real-Time Permanent Establishment (PE) Risk Scoring</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Database className="h-4 w-4 text-slate-700" />
+            <span>Secure Supabase RLS Data Isolation</span>
+          </div>
+        </div>
+      </div>
+
       {/* Main Workspace */}
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
+        {/* Dynamic ROI Marketing Callout */}
+        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 text-white shadow-xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <span className="rounded-full bg-indigo-500/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-200">
+                Instant CFO ROI Model
+              </span>
+              <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
+                The Break-Even Threshold: EOR vs. Local Entity
+              </h2>
+              <p className="text-xs text-slate-300 max-w-xl">
+                At ${eorFee}/mo per hire, managing 5 remote workers through an EOR costs <strong className="text-white">${(eorFee * 5 * 12).toLocaleString()}/yr</strong>. Graduating them to local payroll via Orbital HR drops your cost to <strong className="text-white">${((orbitalFee + 110) * 5 * 12).toLocaleString()}/yr</strong>.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-md border border-white/15">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Net Annual Savings</p>
+                <p className="text-2xl font-black text-emerald-400">${kpis.totalAnnualSavings.toLocaleString()}</p>
+              </div>
+              <div className="h-8 w-px bg-white/20"></div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Ready to Graduate</p>
+                <p className="text-2xl font-black text-white">{kpis.graduateCount} Hires</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* KPI Strip */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
