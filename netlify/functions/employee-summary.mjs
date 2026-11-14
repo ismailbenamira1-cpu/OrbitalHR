@@ -1,7 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default async (req) => {
-  if (req.method !== 'POST') { 
+  if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
       headers: { 'Content-Type': 'application/json' },
@@ -10,7 +10,10 @@ export default async (req) => {
 
   try {
     const { employee } = await req.json();
-    const ai = new GoogleGenAI({});
+    
+    // Initialize the Gemini SDK using Netlify's environment key
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are a cross-border HR and corporate tax compliance analyst. 
 Summarize this employee's compliance status in 3 short, actionable bullet points for a CFO and VP of People (maximum 85 words total):
@@ -22,12 +25,11 @@ Summarize this employee's compliance status in 3 short, actionable bullet points
 - Social Security Treaty: ${employee.treatyStatus || 'Check Bilateral Agreement'}
 - Current Payroll Model: ${employee.payrollModel || 'Home Payroll'}`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
-    return new Response(JSON.stringify({ summary: response.text }), {
+    return new Response(JSON.stringify({ summary: text }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
