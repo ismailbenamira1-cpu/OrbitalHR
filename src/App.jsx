@@ -483,7 +483,7 @@ const [loadingId, setLoadingId] = useState(null);
 const generateAiBrief = async (employee) => {
   setLoadingId(employee.id);
   try {
-    const response = await fetch('/.netlify/functions/employee-summary', {
+    const response = await fetch('/api/employee-summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employee }),
