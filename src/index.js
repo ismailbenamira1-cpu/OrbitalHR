@@ -44,7 +44,7 @@ Summarize this employee's compliance status in 3 short, actionable bullet points
       }
     }
 
-    // 2. Serve static React frontend files from the 'dist' folder for all other routes
+    // 2. Serve static frontend assets from the 'dist' folder for all other routes
     return env.ASSETS.fetch(request);
   },
 };
