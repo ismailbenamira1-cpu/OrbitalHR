@@ -7,7 +7,7 @@ export async function onRequestPost(context) {
 
     const apiKey = env.GEMINI_API_KEY || env.API_KEY;
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Gemini API key not configured in Cloudflare' }), {
+      return new Response(JSON.stringify({ error: 'Gemini API key not configured in Cloudflare environment' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -26,8 +26,7 @@ Summarize this employee's compliance status in 3 short, actionable bullet points
 - Social Security Treaty: ${employee.ssInfo?.form || 'Check Bilateral Agreement'}`;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = result.response.text();
 
     return new Response(JSON.stringify({ summary: text, brief: text }), {
       status: 200,
