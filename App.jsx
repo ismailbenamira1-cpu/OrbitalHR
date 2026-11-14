@@ -477,6 +477,25 @@ export default function App() {
     }
     setEmployees((prev) => prev.filter((item) => item.id !== id));
   }
+  const [aiSummaries, setAiSummaries] = useState({});
+const [loadingId, setLoadingId] = useState(null);
+
+const generateAiBrief = async (employee) => {
+  setLoadingId(employee.id);
+  try {
+    const response = await fetch('/.netlify/functions/employee-summary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ employee }),
+    });
+    const data = await response.json();
+    setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary }));
+  } catch (err) {
+    console.error('AI summary failed:', err);
+  } finally {
+    setLoadingId(null);
+  }
+};
 
   function exportCsvReport() {
     const headers = [
@@ -958,36 +977,51 @@ export default function App() {
                     >
                       {emp.recommendation}
                     </span>
-                  </td>
                   <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
-                    <div className="inline-flex items-center gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingEmpId(emp.id);
-                          setEmpForm({
-                            name: emp.name,
-                            homeCountry: emp.homeCountry,
-                            hostRegion: emp.hostRegion,
-                            role: emp.role,
-                            daysUsed: emp.daysUsed,
-                            currentSetup: emp.currentSetup,
-                          });
-                          setShowEmpForm(true);
-                        }}
-                        className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-indigo-600"
-                        title="Edit"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEmployee(emp.id)}
-                        className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-rose-600"
-                        title="Remove"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
+  <div className="flex flex-col items-end gap-2">
+    <div className="inline-flex items-center gap-2">
+      <button
+        onClick={() => generateAiBrief(emp)}
+        disabled={loadingId === emp.id}
+        className="inline-flex items-center gap-1 rounded bg-indigo-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm"
+      >
+        {loadingId === emp.id ? 'Analyzing...' : '✨ AI Brief'}
+      </button>
+      <button
+        onClick={() => {
+          setEditingEmpId(emp.id);
+          setEmpForm({
+            name: emp.name,
+            homeCountry: emp.homeCountry,
+            hostRegion: emp.hostRegion,
+            role: emp.role,
+            daysUsed: emp.daysUsed,
+            currentSetup: emp.currentSetup,
+          });
+          setShowEmpForm(true);
+        }}
+        className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-indigo-600"
+        title="Edit"
+      >
+        <Edit3 className="h-4 w-4" />
+      </button>
+      <button
+        onClick={() => handleDeleteEmployee(emp.id)}
+        className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-rose-600"
+        title="Remove"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+
+    {aiSummaries[emp.id] && (
+      <div className="w-64 text-left p-2.5 bg-indigo-50/95 border border-indigo-200 rounded-lg text-xs text-slate-700 whitespace-pre-line shadow-lg">
+        <strong className="text-indigo-900 block mb-0.5 font-semibold">AI Compliance Brief:</strong>
+        <p>{aiSummaries[emp.id]}</p>
+      </div>
+    )}
+  </div>
+</td>
                 </tr>
               ))}
             </tbody>
