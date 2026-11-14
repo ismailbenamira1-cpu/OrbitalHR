@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Edit3, Trash2, MessageSquare, Send, X, Bot, Sparkles } from 'lucide-react';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   ShieldAlert,
@@ -477,8 +479,6 @@ export default function App() {
     }
     setEmployees((prev) => prev.filter((item) => item.id !== id));
   }
- import React, { useState } from 'react';
-import { MessageSquare, Send, X, Bot, Sparkles } from 'lucide-react';
 
 export function ComplianceCopilot({ employees }) {
   const [isOpen, setIsOpen] = useState(false);
