@@ -17,9 +17,7 @@ export async function onRequest(context) {
     try {
       const body = await request.json();
       employee = body.employee || body || {};
-    } catch (e) {
-      // Fallback if body is empty or malformed
-    }
+    } catch (e) {}
 
     const apiKey = env.GEMINI_API_KEY || env.API_KEY;
     if (!apiKey) {
@@ -53,21 +51,35 @@ Provide a structured markdown brief with:
 3. Social Security & Payroll Compliance
 4. Recommended Action Items (3 bullet points)`;
 
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
-      })
-    });
+    // List of models to try in sequence if one is experiencing high demand
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+    let geminiRes = null;
+    let data = null;
 
-    const data = await geminiRes.json();
+    for (const model of modelsToTry) {
+      try {
+        geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+          })
+        });
 
-    if (!geminiRes.ok) {
+        if (geminiRes.ok) {
+          data = await geminiRes.json();
+          break; // Success! Exit loop.
+        }
+      } catch (err) {
+        // Move to the next model if this one fails
+      }
+    }
+
+    if (!data || !geminiRes || !geminiRes.ok) {
       return new Response(JSON.stringify({ 
         success: false, 
-        error: data.error?.message || "Gemini API rejected request" 
+        error: "Gemini models are currently experiencing high demand. Please try clicking the button again in a few seconds." 
       }), { status: 200, headers: corsHeaders });
     }
 
