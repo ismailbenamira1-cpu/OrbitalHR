@@ -488,10 +488,23 @@ const generateAiBrief = async (employee) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ employee }),
     });
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      throw new Error(`Server returned HTML/Text instead of JSON. Check your _redirects file! Response: ${text.substring(0, 100)}...`);
+    }
+
     const data = await response.json();
-    setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary }));
+
+    if (data.success && (data.summary || data.brief)) {
+      setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary || data.brief }));
+    } else {
+      alert("AI Brief Error: " + (data.error || "No summary returned"));
+    }
   } catch (err) {
     console.error('AI summary failed:', err);
+    alert('AI Brief Failed: ' + err.message);
   } finally {
     setLoadingId(null);
   }
