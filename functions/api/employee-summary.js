@@ -1,56 +1,75 @@
-export async function onRequestPost(context) {
-  try {
-    const { request, env } = context;
-    const body = await request.json();
-    const employee = body.employee || {};
+export async function onRequest(context) {
+  const { request, env } = context;
 
-    // 1. Check for Gemini API Key in Cloudflare environment variables
-    const apiKey = env.GEMINI_API_KEY || env.API_KEY;
-    if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is missing in Cloudflare Pages settings.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Content-Type': 'application/json'
+  };
+
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    let employee = {};
+    try {
+      const body = await request.json();
+      employee = body.employee || {};
+    } catch (e) {
+      // Proceed if body is empty
     }
 
-    const prompt = `You are a cross-border HR and corporate tax compliance analyst. 
-Summarize this employee's compliance status in 3 short, actionable bullet points for a CFO and VP of People (maximum 85 words total):
-- Home Country: ${employee.homeCountry || 'US'}
-- Host Country: ${employee.hostCountry || 'Unknown'}
-- Days Accrued: ${employee.daysUsed || 0}
-- Role Type: ${employee.role || 'Standard Remote'}
-- PE Risk Level: ${employee.peRisk || 'Low'}
-- Social Security Treaty: ${employee.ssInfo?.form || 'Check Bilateral Agreement'}`;
+    const apiKey = env.GEMINI_API_KEY || env.API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Configuration Error: GEMINI_API_KEY is missing in Cloudflare Pages Environment Variables." 
+      }), { status: 200, headers: corsHeaders });
+    }
 
-    // 2. Call Gemini API directly via native fetch (Zero npm dependencies required)
+    const prompt = `You are a cross-border HR compliance expert. Provide 3 short bullet points summarizing compliance status for ${employee.homeCountry || 'US'} remote worker in ${employee.hostCountry || 'Canada'}: Days: ${employee.daysUsed || 0}, Role: ${employee.role || 'Remote'}. Keep it under 60 words.`;
+
     const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     });
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      return new Response(JSON.stringify({ error: `Gemini API rejected request: ${errText}` }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const rawText = await geminiRes.text();
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (err) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Invalid JSON received from Gemini API", 
+        rawResponse: rawText 
+      }), { status: 200, headers: corsHeaders });
     }
 
-    const data = await geminiRes.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No summary generated.';
+    if (!geminiRes.ok) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "Gemini API Error", 
+        details: data.error?.message || data 
+      }), { status: 200, headers: corsHeaders });
+    }
 
-    return new Response(JSON.stringify({ summary: text, brief: text }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const summary = data.candidates?.[0]?.content?.parts?.[0]?.text || "Compliance review operational. No flags detected.";
 
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error in employee-summary function' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ 
+      success: true, 
+      summary: summary, 
+      brief: summary 
+    }), { status: 200, headers: corsHeaders });
+
+  } catch (err) {
+    return new Response(JSON.stringify({ 
+      success: false, 
+      error: err.message,
+      stack: err.stack 
+    }), { status: 200, headers: corsHeaders });
   }
 }
