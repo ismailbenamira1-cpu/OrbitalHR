@@ -8,7 +8,6 @@ export async function onRequest(context) {
     'Content-Type': 'application/json'
   };
 
-  // Handle CORS preflight request instantly
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
@@ -30,47 +29,77 @@ export async function onRequest(context) {
     }
 
     const prompt = `You are an expert cross-border HR and corporate tax compliance analyst for OrbitalHR. 
-  Generate a professional Executive AI Compliance Brief for this employee:
-  - Name: ${employee.name || 'Remote Employee'}
-  - Home Country: ${employee.homeCountry || 'US'}
-  - Host Country: ${employee.hostCountry || 'Canada'}
-  - Days Accrued: ${employee.daysUsed || 45} days
-  - Role: ${employee.role || 'Standard Remote'}
-  - PE Risk Level: ${employee.peRisk || 'Moderate'}
-  - Social Security Treaty: ${employee.ssInfo?.form || 'Bilateral Certificate Pending'}
+Generate a professional Executive AI Compliance Brief for this employee:
+- Name: ${employee.name || 'Remote Employee'}
+- Home Country: ${employee.homeCountry || 'US'}
+- Host Country: ${employee.hostCountry || 'Canada'}
+- Days Accrued: ${employee.daysUsed || 45} days
+- Role: ${employee.role || 'Standard Remote'}
+- PE Risk Level: ${employee.peRisk || 'Moderate'}
+- Social Security Treaty: ${employee.ssInfo?.form || 'Bilateral Certificate Pending'}
 
-  Provide a structured markdown brief with:
-  1. Executive Summary & Tax Risk
-  2. Immigration & Day-Count Velocity
-  3. Social Security & Payroll Compliance
-  4. Recommended Action Items (3 bullet points)`;
+Provide a structured markdown brief with:
+1. Executive Summary & Tax Risk
+2. Immigration & Day-Count Velocity
+3. Social Security & Payroll Compliance
+4. Recommended Action Items (3 bullet points)`;
 
-    // Add 9-second timeout to prevent gateway drops
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 9000);
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-1.5-pro'];
+    let data = null;
 
-    const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
-      }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
+    async function callWithRetry(model, payload) {
+      let delay = 1000;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const data = await geminiRes.json();
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
 
-    if (!geminiRes.ok) {
-      return new Response(JSON.stringify({ success: false, error: data.error?.message || 'Gemini API is busy. Please try again.' }), { status: 200, headers: corsHeaders });
+          if (res.ok) {
+            return await res.json();
+          }
+
+          // If overloaded (429 or 503), back off and retry
+          if ((res.status === 429 || res.status === 503) && attempt < 2) {
+            await new Promise(r => setTimeout(r, delay));
+            delay *= 2;
+            continue;
+          }
+        } catch (e) {
+          clearTimeout(timeoutId);
+        }
+        break;
+      }
+      return null;
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Compliance review completed.';
+    for (const model of modelsToTry) {
+      data = await callWithRetry(model, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+      });
+      if (data && data.candidates) break;
+    }
+
+    if (!data || !data.candidates) {
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: 'AI service is experiencing high demand. Please click the button again.' 
+      }), { status: 200, headers: corsHeaders });
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
 
     return new Response(JSON.stringify({ success: true, summary: text, brief: text }), { status: 200, headers: corsHeaders });
 
   } catch (err) {
-    return new Response(JSON.stringify({ success: false, error: err.name === 'AbortError' ? 'Request timed out. Please retry.' : err.message }), { status: 200, headers: corsHeaders });
+    return new Response(JSON.stringify({ success: false, error: err.message }), { status: 200, headers: corsHeaders });
   }
 }
