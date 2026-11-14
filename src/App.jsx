@@ -112,7 +112,6 @@ export function ComplianceCopilot({ employees }) {
 // MAIN APP COMPONENT
 // ==========================================
 export default function App() {
-  // Keep your existing employee state and handlers here
   const [employees, setEmployees] = useState([
     {
       id: '1',
