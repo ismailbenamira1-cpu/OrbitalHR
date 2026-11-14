@@ -51,39 +51,54 @@ Provide a structured markdown brief with:
 3. Social Security & Payroll Compliance
 4. Recommended Action Items (3 bullet points)`;
 
-    // List of models to try in sequence if one is experiencing high demand
-    const modelsToTry = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-    let geminiRes = null;
+    const modelsToTry = ['gemini-3.8-flash', 'gemini-1.5-flash'];
     let data = null;
 
-    for (const model of modelsToTry) {
-      try {
-        geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    // Helper function for exponential backoff retry on 429 overload
+    async function callGeminiWithRetry(model, payload, maxRetries = 3) {
+      let delay = 1000;
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
-          })
+          body: JSON.stringify(payload)
         });
 
-        if (geminiRes.ok) {
-          data = await geminiRes.json();
-          break; // Success! Exit loop.
+        if (res.ok) {
+          return await res.json();
         }
-      } catch (err) {
-        // Move to the next model if this one fails
+
+        // If rate limited (429) or overloaded (503), wait and retry
+        if ((res.status === 429 || res.status === 503) && attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay));
+          delay *= 2; // Double wait time each attempt (1s -> 2s -> 4s)
+          continue;
+        }
+
+        break; // Non-retryable error
+      }
+      return null;
+    }
+
+    for (const model of modelsToTry) {
+      data = await callGeminiWithRetry(model, {
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.3, maxOutputTokens: 800 }
+      });
+
+      if (data && data.candidates) {
+        break; // Success!
       }
     }
 
-    if (!data || !geminiRes || !geminiRes.ok) {
+    if (!data || !data.candidates) {
       return new Response(JSON.stringify({ 
         success: false, 
-        error: "Gemini models are currently experiencing high demand. Please try clicking the button again in a few seconds." 
+        error: "AI service is temporarily busy. Please click the button again." 
       }), { status: 200, headers: corsHeaders });
     }
 
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Compliance review completed.";
+    const text = data.candidates[0].content.parts[0].text;
 
     return new Response(JSON.stringify({ 
       success: true, 
