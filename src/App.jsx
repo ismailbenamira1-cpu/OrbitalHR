@@ -165,7 +165,6 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState(null);
   
-  // Employee form state
   const [empForm, setEmpForm] = useState({
     name: '',
     homeCountry: 'US',
@@ -228,7 +227,6 @@ export default function App() {
     if (!empForm.name || !empForm.role) return;
 
     if (editingEmpId) {
-      // Update existing
       setEmployees(prev => prev.map(item => item.id === editingEmpId ? {
         ...item,
         name: empForm.name,
@@ -243,7 +241,6 @@ export default function App() {
         recommendation: empForm.recommendation
       } : item));
     } else {
-      // Add new
       const newEmployee = {
         id: Date.now().toString(),
         name: empForm.name,
@@ -437,157 +434,3 @@ export default function App() {
                           >
                             <Edit3 className="h-4 w-4" />
                           </button>
-                          <button 
-                            onClick={() => handleDeleteEmployee(emp.id)} 
-                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600 transition" 
-                            title="Remove"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </main>
-
-      {/* Add / Edit Employee Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between bg-indigo-950 px-6 py-4 text-white">
-              <h3 className="font-bold text-sm">{editingEmpId ? 'Edit Employee Record' : 'Add New Remote Employee'}</h3>
-              <button onClick={() => setShowAddModal(false)} className="rounded p-1 hover:bg-indigo-900 text-slate-300 hover:text-white">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSaveEmployee} className="p-6 space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g., Jane Doe"
-                    value={empForm.name}
-                    onChange={(e) => setEmpForm({...empForm, name: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Role / Title</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g., Senior Engineer"
-                    value={empForm.role}
-                    onChange={(e) => setEmpForm({...empForm, role: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Home Country</label>
-                  <input
-                    type="text"
-                    value={empForm.homeCountry}
-                    onChange={(e) => setEmpForm({...empForm, homeCountry: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Host Region & Country</label>
-                  <input
-                    type="text"
-                    value={empForm.hostRegion}
-                    onChange={(e) => setEmpForm({...empForm, hostRegion: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Days Used</label>
-                  <input
-                    type="number"
-                    value={empForm.daysUsed}
-                    onChange={(e) => setEmpForm({...empForm, daysUsed: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Visa Limit (Days)</label>
-                  <input
-                    type="number"
-                    value={empForm.visaLimitDays}
-                    onChange={(e) => setEmpForm({...empForm, visaLimitDays: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">PE Risk Level</label>
-                  <select
-                    value={empForm.peRisk}
-                    onChange={(e) => setEmpForm({...empForm, peRisk: e.target.value})}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 bg-white focus:border-indigo-500 focus:outline-none"
-                  >
-                    <option value="LOW">LOW</option>
-                    <option value="MODERATE">MODERATE</option>
-                    <option value="HIGH">HIGH</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Social Security / Treaty Form</label>
-                <input
-                  type="text"
-                  value={empForm.form}
-                  onChange={(e) => setEmpForm({...empForm, form: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">Recommended Action</label>
-                <input
-                  type="text"
-                  value={empForm.recommendation}
-                  onChange={(e) => setEmpForm({...empForm, recommendation: e.target.value})}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
-                >
-                  {editingEmpId ? 'Update Employee' : 'Save Employee'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Floating AI Compliance Copilot Widget */}
-      <ComplianceCopilot employees={employees} />
-    </div>
-  );
-}
