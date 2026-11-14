@@ -165,6 +165,11 @@ export default function App() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState(null);
   
+  // AI Brief states
+  const [aiSummaries, setAiSummaries] = useState({});
+  const [loadingId, setLoadingId] = useState(null);
+
+  // Employee form state
   const [empForm, setEmpForm] = useState({
     name: '',
     homeCountry: 'US',
@@ -187,6 +192,37 @@ export default function App() {
       return matchesSearch && matchesRisk;
     });
   }, [employees, searchQuery, filterRisk]);
+
+  // AI Brief Generator Handler
+  const generateAiBrief = async (employee) => {
+    setLoadingId(employee.id);
+    try {
+      const response = await fetch('/api/employee-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee }),
+      });
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        throw new Error(`Server returned HTML/Text instead of JSON. Check your _redirects file! Response: ${text.substring(0, 100)}...`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && (data.summary || data.brief)) {
+        setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary || data.brief }));
+      } else {
+        alert("AI Brief Error: " + (data.error || "No summary returned"));
+      }
+    } catch (err) {
+      console.error('AI summary failed:', err);
+      alert('AI Brief Failed: ' + err.message);
+    } finally {
+      setLoadingId(null);
+    }
+  };
 
   const handleOpenAddModal = () => {
     setEditingEmpId(null);
@@ -336,101 +372,4 @@ export default function App() {
             <div className="text-2xl font-bold text-slate-900">
               {employees.filter(e => e.peRisk === 'HIGH' || e.daysUsed > 120).length} Candidates
             </div>
-            <div className="text-xs text-indigo-600 mt-1 font-medium">Cost optimization flagged</div>
-          </div>
-        </div>
-
-        {/* Filters & Search Toolbar */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by name, role, or host country..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-300 text-xs focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <div className="flex items-center gap-1.5 text-xs text-slate-600">
-              <Filter className="h-3.5 w-3.5" />
-              <span className="font-medium">Filter Risk:</span>
-            </div>
-            <select
-              value={filterRisk}
-              onChange={(e) => setFilterRisk(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-700 bg-white focus:outline-none focus:border-indigo-500"
-            >
-              <option value="ALL">All Risk Levels</option>
-              <option value="LOW">Low Risk</option>
-              <option value="MODERATE">Moderate Risk</option>
-              <option value="HIGH">High Risk</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Employee Roster Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
-            <div>
-              <h2 className="font-bold text-slate-900 text-sm">Active Remote Employee Roster</h2>
-              <p className="text-xs text-slate-500">Monitoring day counts, tax permanent establishment risks, and social security compliance.</p>
-            </div>
-            <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-md border border-indigo-100">
-              {filteredEmployees.length} Showing
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 text-[11px] font-semibold uppercase tracking-wider">
-                  <th className="px-6 py-3">Employee / Role</th>
-                  <th className="px-6 py-3">Host Region</th>
-                  <th className="px-6 py-3">Visa Days Used</th>
-                  <th className="px-6 py-3">PE Tax Risk</th>
-                  <th className="px-6 py-3">Social Security</th>
-                  <th className="px-6 py-3">Recommendation</th>
-                  <th className="px-6 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-xs text-slate-700">
-                {filteredEmployees.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
-                      No employees found matching your search criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredEmployees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-900 text-sm">{emp.name}</div>
-                        <div className="text-slate-500">{emp.homeCountry} · {emp.role}</div>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-slate-800">{emp.hostRegion}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-900">
-                        {emp.daysUsed} / {emp.rule?.visaLimitDays || 183}d
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                          emp.peRisk === 'HIGH' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
-                          emp.peRisk === 'MODERATE' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
-                          'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                        }`}>
-                          {emp.peRisk}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-slate-800">{emp.ssInfo?.form}</td>
-                      <td className="px-6 py-4 font-medium text-indigo-700">{emp.recommendation}</td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => handleOpenEditModal(emp)} 
-                            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 transition" 
-                            title="Edit"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
+            <div className="text-xs
