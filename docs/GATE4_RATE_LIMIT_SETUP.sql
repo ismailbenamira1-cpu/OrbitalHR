@@ -28,7 +28,7 @@ as $$
 declare
   ip_allowed boolean := false;
   email_allowed boolean := false;
-  current_time timestamptz := now();
+  v_now timestamptz := now();
 begin
   if p_ip_hash is null or p_email_hash is null
      or p_ip_hash !~ '^[0-9a-f]{64}$'
@@ -39,7 +39,7 @@ begin
 
   -- Atomic, strict per-IP fixed window: max 10 verified submissions/hour.
   insert into public.lead_rate_counters (bucket_key, window_start, request_count)
-  values ('ip:' || p_ip_hash, date_trunc('hour', current_time), 1)
+  values ('ip:' || p_ip_hash, date_trunc('hour', v_now), 1)
   on conflict (bucket_key, window_start)
   do update set request_count = public.lead_rate_counters.request_count + 1
   where public.lead_rate_counters.request_count < 10
@@ -51,7 +51,7 @@ begin
 
   -- Atomic, strict per-email fixed window: max 3 attempts/UTC day.
   insert into public.lead_rate_counters (bucket_key, window_start, request_count)
-  values ('email:' || p_email_hash, date_trunc('day', current_time at time zone 'UTC') at time zone 'UTC', 1)
+  values ('email:' || p_email_hash, date_trunc('day', v_now at time zone 'UTC') at time zone 'UTC', 1)
   on conflict (bucket_key, window_start)
   do update set request_count = public.lead_rate_counters.request_count + 1
   where public.lead_rate_counters.request_count < 3
