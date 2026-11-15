@@ -1269,6 +1269,10 @@ const generateAiBrief = async (employee) => {
         {/* Legal Disclaimer */}
         <footer className="rounded-xl border border-slate-200 bg-slate-100/80 px-5 py-4 text-xs text-slate-500">
           <strong>Screening-only MVP:</strong> OrbitalHR produces internal policy alerts for triage, not findings of legal breach, residence, employer PE, social-security liability or visa/work authorization. Underlying assumptions are incomplete and jurisdiction-specific verification is required. The model's ESCALATE label is an operational intervention trigger, not confirmation of a legal violation. Do not rely on these outputs to decide travel, payroll or tax filings without qualified professional review.
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-200 pt-3">
+            <span>Privacy Policy and Terms of Service: in preparation</span>
+            <a className="font-medium text-indigo-700 underline hover:text-indigo-900" href="mailto:ismailbenamira1@gmail.com">Privacy inquiries: ismailbenamira1@gmail.com</a>
+          </div>
         </footer>
       </main>
 
