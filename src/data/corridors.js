@@ -1,10 +1,10 @@
 // Orbital HR rules engine: 2 home countries x 7 host regions x 3 pillars = 42 matrix cells.
-// "conf": verified = official source checked Nov 2026; secondary = consistent across secondary sources;
-//         verify = confirm with local counsel before relying on it.
+// Historical source-review labels only; independent legal verification and professional sign-off are still pending.
+// "conf" is not a representation that any corridor is legally approved or current.
 // Day thresholds marked "policy" are Orbital alert settings, not legal limits.
 export const HOMES = ['United States', 'Canada'];
 export const HOSTS = ['Schengen Area', 'United Kingdom', 'Mexico', 'India', 'Philippines', 'Thailand', 'Indonesia'];
-export const LAST_VERIFIED = 'November 2026';
+export const LAST_VERIFIED = 'Source review pending';
 export const LEVELS = ['OK', 'WATCH', 'CRITICAL', 'BREACH'];
 export const PILLARS = ['ss', 'pe', 'visa'];
 export const PILLAR_TITLES = { ss: 'Pillar 1: Social Security', pe: 'Pillar 2: PE & Tax', visa: 'Pillar 6: Visa & Stay' };
@@ -155,9 +155,9 @@ const SS_NO_AGREEMENT_ACTIONS = {
   BREACH: 'Internal escalation deadline reached, not a finding of statutory breach. Escalate immediately and remediate any confirmed registration or contribution obligations.',
 };
 const ACTIONS = {
-  visa: { OK: 'Within permitted stay.', WATCH: 'Plan an extension or a visa pathway now.', CRITICAL: 'Alert HR: apply for an extension or arrange departure or a work visa.', BREACH: 'Overstay risk: leave or regularise status immediately.' },
-  pe: { OK: 'No action needed.', WATCH: 'Review role, contract signing and home-office use in the host country.', CRITICAL: 'Escalate employer PE review to HR and corporate tax counsel; assess contracting authority and business presence.', BREACH: 'Internal PE escalation threshold reached; assess employer PE with corporate tax counsel.' },
-  ss: { OK: 'Coverage position is in order.', WATCH: 'Request the certificate of coverage now (or confirm host contribution rules).', CRITICAL: 'Alert HR: certificate overdue or host contributions likely; act this week.', BREACH: 'Dual contribution exposure: file the certificate or move to local payroll.' },
+  visa: { OK: 'No configured stay-day alert; separately verify actual entry permission, work rights and travel history.', WATCH: 'Plan an extension or a visa pathway now.', CRITICAL: 'Alert HR: apply for an extension or arrange departure or a work visa.', BREACH: 'Internal authorised-stay warning: urgently verify individual permission, expiry and legally available options with an immigration adviser.' },
+  pe: { OK: 'No internal PE day-count alert; review facts and applicable tax treaty with counsel.', WATCH: 'Review role, contract signing and home-office use in the host country.', CRITICAL: 'Escalate employer PE review to HR and corporate tax counsel; assess contracting authority and business presence.', BREACH: 'Internal PE escalation threshold reached; assess employer PE with corporate tax counsel.' },
+  ss: { OK: 'No current certificate-screening alert; confirm actual coverage and validity with the competent authority.', WATCH: 'Request the certificate of coverage now (or confirm host contribution rules).', CRITICAL: 'Alert HR: certificate overdue or host contributions likely; act this week.', BREACH: 'Internal screening threshold reached; urgently verify actual contribution and certificate obligations with an adviser.' },
 };
 
 export function evaluatePillars(emp) {
