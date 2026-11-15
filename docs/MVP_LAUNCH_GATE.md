@@ -39,6 +39,16 @@
 - **Gate 6 technical deliverables:** staged; CI/build/browser/live audit status must be checked on the final commit and matched to actual deployed version.
 - **Gate 6 operational approval:** pending hosting administration, monitoring/alerts, incident drills, provider cost controls and confirmed rollback. This does not supersede incomplete Gate 5 legal/privacy prerequisites for real employee data.
 
+## Gate 6 — Additional screening-scope legal review and launch acceptance
+
+- [Detailed Gate 6 screening claims and launch acceptance report](GATE6_SCREENING_CLAIMS_AND_LAUNCH_ACCEPTANCE.md).
+- The landing-page claims previously promised verified rules, exact payroll migration timing, compliance assurance, and certificate/form automation not present in the MVP. These claims have been replaced with screening-only, source-review-required descriptions.
+- The hero now displays prominent legal/work-permission and tax/social-security non-clearance warnings. The employee-entry form advises **fictional records only pending privacy approval**.
+- Green/OK track outputs no longer assert legal clearance. 42 matrix cells retain unverified assumptions and require specialist source/route review; a UK visitor-remote-work rule was spot-checked against official guidance but this is not blanket certification.
+- Automated [launch claims tests](../tests/gate6-launch-claims.test.js) check that unsupported product promises do not recur.
+- **Gate 6 screening-scope documentation and claim edits completed; current final-commit CI, live deployment correlation, professional legal and Gate 5 approvals remain open.**
+- **Public onboarding of identifiable employee data: NO-GO.** A demo using fictional records may be tested with the technical smoke-check conditions.
+
 ## Engineering controls implemented
 
 - Production Vite build, Playwright smoke test, 37 Node regression tests, and Cloudflare Functions build run in GitHub Actions (consult latest run before claiming green).
