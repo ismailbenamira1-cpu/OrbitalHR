@@ -22,160 +22,12 @@ import {
   X,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-
-const HOST_RULES = {
-  'Schengen Area': {
-    visaLimitDays: 90,
-    visaRuleShort: '90/180 rolling days (EU EES biometric tracking live)',
-    visaPathway: 'Visa-free short stay (90/180) or National Digital Nomad Visa (Type D)',
-    taxResidencyDays: 183,
-    taxRuleShort: '183 days in calendar/tax year across member state',
-    peBaseRisk: 'High',
-    usSocialSecurity: {
-      covered: true,
-      form: 'SSA Certificate (e.g., USA/DE 101, USA/FR 101)',
-      note: 'Active US Totalization Agreements across major Schengen states (up to 5 yrs)',
-    },
-    caSocialSecurity: {
-      covered: true,
-      form: 'CRA CPT Form (e.g., CPT130 / CPT52 / CPT125)',
-      note: 'Active Canadian agreements (36–60 months detached coverage)',
-    },
-    localPayrollMonthlyUSD: 145,
-    entitySetupOneTimeUSD: 4500,
-    lastVerified: 'November 2026',
-  },
-  'United Kingdom': {
-    visaLimitDays: 180,
-    visaRuleShort: '180 days/visit (remote work must remain incidental)',
-    visaPathway: 'Standard Visitor (incidental remote work) or Global Business Mobility',
-    taxResidencyDays: 183,
-    taxRuleShort: '183 days in UK tax year (Apr 6–Apr 5) or Statutory Residence ties',
-    peBaseRisk: 'High',
-    usSocialSecurity: {
-      covered: true,
-      form: 'Form USA/UK 1',
-      note: 'US-UK Totalization Agreement prevents dual Social Security / NIC up to 5 yrs',
-    },
-    caSocialSecurity: {
-      covered: true,
-      form: 'Form CPT71',
-      note: 'Canada-UK Convention covers detached workers up to 60 months',
-    },
-    localPayrollMonthlyUSD: 130,
-    entitySetupOneTimeUSD: 2800,
-    lastVerified: 'November 2026',
-  },
-  Mexico: {
-    visaLimitDays: 180,
-    visaRuleShort: '180 days FMM visitor; Residente Temporal for 1–4 yrs',
-    visaPathway: 'FMM Visitor (<180d) or Temporary Resident Visa (Residente Temporal)',
-    taxResidencyDays: 183,
-    taxRuleShort: 'Center of vital interests / permanent home test (or 183+ days)',
-    peBaseRisk: 'High',
-    usSocialSecurity: {
-      covered: false,
-      form: 'None (No US-Mexico Treaty)',
-      note: 'Dual FICA + Mexican IMSS risk if local employment is triggered',
-    },
-    caSocialSecurity: {
-      covered: true,
-      form: 'Form CPT62',
-      note: 'Canada-Mexico Social Security Agreement covers detached workers up to 60 months',
-    },
-    localPayrollMonthlyUSD: 110,
-    entitySetupOneTimeUSD: 3200,
-    lastVerified: 'November 2026',
-  },
-  India: {
-    visaLimitDays: 180,
-    visaRuleShort: '180 days/visit Business Visa (FRRO registration >180d)',
-    visaPathway: 'e-Business Visa (no Digital Nomad Visa; Employment Visa for local hires)',
-    taxResidencyDays: 182,
-    taxRuleShort: '182+ days in Indian FY (Apr 1–Mar 31); service PE watch',
-    peBaseRisk: 'High',
-    usSocialSecurity: {
-      covered: false,
-      form: 'None (No US-India Treaty)',
-      note: 'No bilateral exemption; dual FICA + Indian EPF exposure if locally employed',
-    },
-    caSocialSecurity: {
-      covered: true,
-      form: 'Form CPT169',
-      note: 'Canada-India Agreement prevents dual CPP/EPF up to 60 months',
-    },
-    localPayrollMonthlyUSD: 95,
-    entitySetupOneTimeUSD: 3800,
-    lastVerified: 'November 2026',
-  },
-  Philippines: {
-    visaLimitDays: 59,
-    visaRuleShort: '30d visa-free (extendable to 59d+ via 9A; EO 86 DNV portal pending)',
-    visaPathway: '9A Tourist Extension or 9G Pre-Arranged Employment Visa',
-    taxResidencyDays: 180,
-    taxRuleShort: '>180 days in calendar year triggers Resident Alien tax status',
-    peBaseRisk: 'Moderate',
-    usSocialSecurity: {
-      covered: false,
-      form: 'None (No US-Philippines Treaty)',
-      note: 'No bilateral exemption from Philippine SSS/PhilHealth if locally hired',
-    },
-    caSocialSecurity: {
-      covered: true,
-      form: 'Form CPT64',
-      note: 'Canada-Philippines Agreement covers detached workers up to 60 months',
-    },
-    localPayrollMonthlyUSD: 90,
-    entitySetupOneTimeUSD: 3500,
-    lastVerified: 'November 2026',
-  },
-  Thailand: {
-    visaLimitDays: 180,
-    visaRuleShort: '180 days/entry on DTV (500k THB savings + home residency/police cert)',
-    visaPathway: 'Destination Thailand Visa (DTV) or Non-Immigrant B + Work Permit',
-    taxResidencyDays: 180,
-    taxRuleShort: '180+ days in calendar year triggers Thai tax residency',
-    peBaseRisk: 'Moderate',
-    usSocialSecurity: {
-      covered: false,
-      form: 'None (No US-Thailand Treaty)',
-      note: 'No bilateral social security treaty; monitor Thai SSF rules',
-    },
-    caSocialSecurity: {
-      covered: false,
-      form: 'None (No Canada-Thailand Treaty)',
-      note: 'No bilateral social security treaty; CPP continues while detached',
-    },
-    localPayrollMonthlyUSD: 100,
-    entitySetupOneTimeUSD: 3600,
-    lastVerified: 'November 2026',
-  },
-  Indonesia: {
-    visaLimitDays: 60,
-    visaRuleShort: '30–60d VoA; 1-yr E33G Remote Worker KITAS ($60k+ foreign income)',
-    visaPathway: 'E33G Remote Worker KITAS or PT PMA + Work KITAS',
-    taxResidencyDays: 183,
-    taxRuleShort: '183+ days in 12 months (or stay permit >183d intent rule)',
-    peBaseRisk: 'High',
-    usSocialSecurity: {
-      covered: false,
-      form: 'None (No US-Indonesia Treaty)',
-      note: 'No bilateral treaty; BPJS mandatory if locally employed',
-    },
-    caSocialSecurity: {
-      covered: false,
-      form: 'None (No Canada-Indonesia Treaty)',
-      note: 'No bilateral treaty; BPJS mandatory if locally employed',
-    },
-    localPayrollMonthlyUSD: 95,
-    entitySetupOneTimeUSD: 4200,
-    lastVerified: 'November 2026',
-  },
-};
+import { HOMES, HOSTS, PILLARS, PILLAR_TITLES, evaluatePillars, hostSummary, worstLevel, buildMatrix } from './data/corridors';
 
 const DEFAULT_EMPLOYEES = [
   {
     id: 'demo-1',
+    certificateStatus: 'Filed',
     name: 'Maya Lin',
     homeCountry: 'United States',
     hostRegion: 'Schengen Area',
@@ -203,6 +55,7 @@ const DEFAULT_EMPLOYEES = [
   },
   {
     id: 'demo-4',
+    certificateStatus: 'Issued',
     name: 'David Park',
     homeCountry: 'Canada',
     hostRegion: 'United Kingdom',
@@ -230,38 +83,113 @@ const DEFAULT_EMPLOYEES = [
   },
 ];
 
+const LEVEL_STYLE = {
+  OK: 'bg-emerald-100 text-emerald-800',
+  WATCH: 'bg-amber-100 text-amber-800',
+  CRITICAL: 'bg-rose-100 text-rose-800',
+  BREACH: 'bg-rose-700 text-white',
+};
+
+function LevelBadge({ level }) {
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEVEL_STYLE[level] || LEVEL_STYLE.OK}`}>
+      {level}
+    </span>
+  );
+}
+
+function PillarMeter({ p }) {
+  return (
+    <div className="mt-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700">
+      <div className="flex items-center justify-between">
+        <LevelBadge level={p.level} />
+        <span className="text-slate-500">
+          {p.days}d · Watch {p.watchAt} · Critical {p.criticalAt} · Limit {p.limit}
+        </span>
+      </div>
+      <p className="mt-1.5 font-medium text-slate-800">{p.action}</p>
+      <p className="mt-1 text-[10px] uppercase tracking-wide text-slate-400">
+        Source confidence: {p.conf} · verified {p.lastVerified}
+      </p>
+    </div>
+  );
+}
+
+function MatrixPanel() {
+  const [home, setHome] = useState('United States');
+  const cells = useMemo(() => buildMatrix().filter((c) => c.home === home), [home]);
+  return (
+    <details className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <summary className="cursor-pointer text-sm font-bold text-slate-900">
+        Compliance rules matrix: 2 home countries × 7 hosts × 3 pillars (42 cells)
+      </summary>
+      <div className="mt-3 flex gap-2">
+        {HOMES.map((h) => (
+          <button
+            key={h}
+            onClick={() => setHome(h)}
+            className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${home === h ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-700'}`}
+          >
+            Home: {h}
+          </button>
+        ))}
+      </div>
+      <div className="mt-3 overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 uppercase text-slate-500">
+            <tr>
+              <th className="px-3 py-2">Host</th>
+              {PILLARS.map((p) => (
+                <th key={p} className="px-3 py-2">{PILLAR_TITLES[p]}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-200">
+            {HOSTS.map((host) => (
+              <tr key={host} className="align-top">
+                <td className="px-3 py-2 font-semibold text-slate-900">{host}</td>
+                {PILLARS.map((p) => {
+                  const c = cells.find((x) => x.host === host && x.pillar === p);
+                  return (
+                    <td key={p} className="px-3 py-2">
+                      <div className="text-slate-700">{c.rule}</div>
+                      <div className="mt-1 font-semibold text-indigo-700">
+                        Watch {c.watchAt} · Critical {c.criticalAt} · Limit {c.limit}d
+                      </div>
+                      <div className="text-[10px] uppercase text-slate-400">{c.conf}</div>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-3 text-[11px] text-slate-500">
+        Alert days are Orbital policy settings built on the stay or residency limit (watch at about 67%, critical about 17% before the limit). Social security days
+        depend on the certificate status. Tax and PE days shrink for sales, executive and manager roles. Verify each cell with local counsel.
+      </p>
+    </details>
+  );
+}
+
 function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
-  const rule = HOST_RULES[emp.hostRegion] || HOST_RULES['Schengen Area'];
+  const rule = hostSummary(emp.hostRegion);
+  const pillars = evaluatePillars(emp);
+  const regionalHeadcount = allEmployees.filter((e) => e.hostRegion === emp.hostRegion).length;
 
-  const regionalHeadcount = allEmployees.filter(
-    (e) => e.hostRegion === emp.hostRegion
-  ).length;
+  const visaDaysLeft = pillars.visa.limit - emp.daysUsed;
+  const taxDaysLeft = pillars.pe.limit - emp.daysUsed;
+  const minDaysToCliff = Math.min(...PILLARS.map((k) => pillars[k].limit - emp.daysUsed));
+  const worst = worstLevel(pillars);
+  const isCliffAlert = worst === 'CRITICAL' || worst === 'BREACH';
+  const peRisk = { OK: 'LOW', WATCH: 'ELEVATED', CRITICAL: 'CRITICAL', BREACH: 'CRITICAL' }[pillars.pe.level];
+  const ssInfo = { form: pillars.ss.rule, note: pillars.ss.detail };
 
-  const visaDaysLeft = rule.visaLimitDays - emp.daysUsed;
-  const taxDaysLeft = rule.taxResidencyDays - emp.daysUsed;
-  const minDaysToCliff = Math.min(visaDaysLeft, taxDaysLeft);
-  const isCliffAlert = minDaysToCliff <= 30;
-
-  const isRevenueOrExec = emp.role === 'Sales / Revenue' || emp.role === 'Executive';
-  let peRisk = 'LOW';
-  if (emp.daysUsed >= rule.taxResidencyDays || (isRevenueOrExec && emp.daysUsed >= 60)) {
-    peRisk = 'CRITICAL';
-  } else if (emp.daysUsed >= 90 || isRevenueOrExec || (rule.peBaseRisk === 'High' && emp.daysUsed >= 60)) {
-    peRisk = 'ELEVATED';
-  }
-
-  const ssInfo = emp.homeCountry === 'Canada' ? rule.caSocialSecurity : rule.usSocialSecurity;
-
-  const eorGraduationThreshold = 5;
-  const shouldGraduateToEntity = regionalHeadcount >= eorGraduationThreshold;
-
+  const shouldGraduateToEntity = regionalHeadcount >= 5;
+  const anyBreach = PILLARS.some((k) => pillars[k].level === 'BREACH');
   let recommendation = 'Stay on Home Payroll';
-  if (
-    shouldGraduateToEntity ||
-    emp.daysUsed > rule.taxResidencyDays ||
-    emp.currentSetup === 'EOR ($599/mo)' ||
-    peRisk === 'CRITICAL'
-  ) {
+  if (shouldGraduateToEntity || anyBreach || emp.currentSetup === 'EOR ($599/mo)' || pillars.pe.level === 'CRITICAL') {
     recommendation = shouldGraduateToEntity
       ? `Graduate to Local Entity (${regionalHeadcount} hires in region)`
       : 'Graduate to Local Payroll';
@@ -278,6 +206,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   return {
     ...emp,
     rule,
+    pillars,
     regionalHeadcount,
     visaDaysLeft,
     taxDaysLeft,
@@ -321,6 +250,7 @@ function CopilotPanel({ roster }) {
     ssInfo: { form: e.ssInfo?.form },
     recommendation: e.recommendation,
     annualSavingsVsEor: e.annualSavingsVsEor,
+    pillars: { ss: e.pillars?.ss?.level, pe: e.pillars?.pe?.level, visa: e.pillars?.visa?.level },
   }));
 
   async function send(text) {
@@ -487,6 +417,7 @@ export default function App() {
             role: row.role_level,
             daysUsed: row.days_used,
             currentSetup: row.current_setup,
+            certificateStatus: row.certificate_status || 'Not filed',
           }));
           setEmployees(mapped);
           setSelectedId(mapped[0].id);
@@ -574,6 +505,7 @@ export default function App() {
             role_level: empForm.role,
             days_used: Number(empForm.daysUsed),
             current_setup: empForm.currentSetup,
+            certificate_status: empForm.certificateStatus || 'Not filed',
           })
           .eq('id', editingEmpId);
       }
@@ -596,6 +528,7 @@ export default function App() {
               role_level: empForm.role,
               days_used: Number(empForm.daysUsed),
               current_setup: empForm.currentSetup,
+            certificate_status: empForm.certificateStatus || 'Not filed',
             },
           ])
           .select()
@@ -664,6 +597,9 @@ const generateAiBrief = async (employee) => {
       'Social Security Certificate',
       'Recommended Action',
       'Annual Savings vs EOR (USD)',
+      'Social Security Status',
+      'PE & Tax Status',
+      'Visa Status',
     ];
     const rows = evaluated.map((e) => [
       `"${e.name}"`,
@@ -677,6 +613,9 @@ const generateAiBrief = async (employee) => {
       `"${e.ssInfo.form}"`,
       `"${e.recommendation}"`,
       e.annualSavingsVsEor,
+      e.pillars.ss.level,
+      e.pillars.pe.level,
+      e.pillars.visa.level,
     ]);
     const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -992,7 +931,7 @@ const generateAiBrief = async (employee) => {
                 Cancel
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-7">
               <input
                 type="text"
                 required
@@ -1014,7 +953,7 @@ const generateAiBrief = async (employee) => {
                 onChange={(e) => setEmpForm({ ...empForm, hostRegion: e.target.value })}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
-                {Object.keys(HOST_RULES).map((region) => (
+                {HOSTS.map((region) => (
                   <option key={region} value={region}>
                     Host: {region}
                   </option>
@@ -1048,6 +987,15 @@ const generateAiBrief = async (employee) => {
                 <option value="Home Payroll">Home Payroll</option>
                 <option value="EOR ($599/mo)">EOR ($599/mo)</option>
                 <option value="Local Payroll">Local Payroll</option>
+              </select>
+              <select
+                value={empForm.certificateStatus || 'Not filed'}
+                onChange={(e) => setEmpForm({ ...empForm, certificateStatus: e.target.value })}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
+              >
+                <option value="Not filed">Certificate: Not filed</option>
+                <option value="Filed">Certificate: Filed</option>
+                <option value="Issued">Certificate: Issued</option>
               </select>
             </div>
             <button
@@ -1084,15 +1032,16 @@ const generateAiBrief = async (employee) => {
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-slate-900">{emp.daysUsed} / {emp.rule.visaLimitDays}d</span>
-                        {emp.isCliffAlert && <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-semibold text-amber-800">Alert</span>}
+                        <LevelBadge level={emp.pillars.visa.level} />
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${emp.peRisk === 'CRITICAL' ? 'bg-rose-100 text-rose-800' : emp.peRisk === 'ELEVATED' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>
-                        {emp.peRisk}
-                      </span>
+                      <LevelBadge level={emp.pillars.pe.level} />
                     </td>
-                    <td className="px-4 py-3.5 text-xs font-semibold text-emerald-700">{emp.ssInfo.form}</td>
+                    <td className="px-4 py-3.5">
+                      <LevelBadge level={emp.pillars.ss.level} />
+                      <div className="mt-1 max-w-[11rem] text-[11px] text-slate-600">{emp.ssInfo.form}</div>
+                    </td>
                     <td className="px-4 py-3.5">
                       <span className="inline-flex rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white">
                         {emp.recommendation}
@@ -1135,6 +1084,7 @@ const generateAiBrief = async (employee) => {
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.visaRuleShort}</p>
               <p className="text-xs text-slate-600">Pathway: {selectedEmployee.rule.visaPathway}</p>
+              <PillarMeter p={selectedEmployee.pillars.visa} />
             </div>
 
             <div className="space-y-2 border-b border-slate-100 pb-4 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
@@ -1143,8 +1093,9 @@ const generateAiBrief = async (employee) => {
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.taxRuleShort}</p>
               <p className="text-xs text-slate-600">
-                Role sensitivity ({selectedEmployee.role}): {selectedEmployee.peRisk} PE risk.
+                {selectedEmployee.pillars.pe.detail}
               </p>
+              <PillarMeter p={selectedEmployee.pillars.pe} />
             </div>
 
             <div className="space-y-2">
@@ -1153,9 +1104,12 @@ const generateAiBrief = async (employee) => {
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.ssInfo.form}</p>
               <p className="text-xs text-slate-600">{selectedEmployee.ssInfo.note}</p>
+              <PillarMeter p={selectedEmployee.pillars.ss} />
             </div>
           </div>
         )}
+
+        <MatrixPanel />
 
         {/* Upcoming Enterprise Compliance Pillars Roadmap (Pillars 3, 4, 5, 7) */}
         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
