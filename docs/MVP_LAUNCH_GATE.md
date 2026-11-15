@@ -19,12 +19,14 @@
 6. Optionally attach a custom Cloudflare-proxied domain later to use zone-level WAF rate-limiting rules; the app-level limiter above functions on `orbitalhr.pages.dev`.
 7. Confirm there is no bypass from another public insert policy, and document rollback: temporarily disable public sign-up or restore a privileged backend path, **not** anonymous direct INSERT.
 
-## Gate 5 draft legal documents (15 November 2026)
+## Gate 5 MVP privacy/legal drafting — documentation complete; launch safeguards outstanding
 
-- Draft Privacy Notice: [`GATE5_PRIVACY_NOTICE_DRAFT.md`](GATE5_PRIVACY_NOTICE_DRAFT.md) — not published; requires the individual's current legal identity, verified privacy email/contact address, vendor processing assessment, retention/deletion implementation, and legal approval.
-- Draft customer DPA: [`GATE5_CUSTOMER_DPA_DRAFT.md`](GATE5_CUSTOMER_DPA_DRAFT.md) — not signed; requires parties, commercial terms, security schedule, cross-border and subprocessor review, incident/erasure commitments and legal approval.
-- User-confirmed OrbitalCopilot and Employee Brief still work and show local employee names after AI request minimization. This is pseudonymization, not guaranteed anonymization.
-- **Gate 5 remains OPEN**: drafting documents alone does not establish privacy compliance or authorize accepting real employee records.
+- **Documentation drafted:** [Gate 5 MVP documentation index](GATE5_MVP_DOCUMENTATION_INDEX.md), linking Privacy Notice, customer DPA, Terms of Service, Acceptable Use/AI Notice, privacy requests and incident response procedure, vendor/subprocessor inventory, and early-access/CASL contact notice.
+- **Founder Privacy Officer contact:** ismailbenamira1@gmail.com. **Operator legal name/address and Ontario business registration are still to be verified.**
+- **Deferred engineering (founder decision):** company/organization tenancy, account-wide verified closure and automatic 30-day active-database employee deletion. Drafts explicitly say these are **not implemented**. Phase A organization migration is stored in GitHub only and has **not** been executed against production. Existing owner-scoped user rosters are unchanged.
+- **Existing implemented product measures:** owner-scoped Supabase roster permissions, authenticated AI endpoints, minimization of structured model inputs, lead Turnstile/rate protection. User previously confirmed Copilot and Employee Brief functional after the AI change.
+- **Outstanding before identifiable employee onboarding:** verify legal operator, obtain any required business/customer agreement/consent, publish approved accurate Privacy Notice and Terms, arrange pragmatic verified data deletion/retention response, test breach procedure, validate Supabase/Cloudflare/AI provider data processing and transfers, and complete scoped legal/security review. **Drafting ≠ operational compliance.**
+- **Gate 5 status:** DRAFT DOCUMENTATION COMPLETE; LEGAL/OPERATIONAL GATE OPEN. Public launch approval remains withheld pending checklist requirements.
 
 ## Engineering controls implemented
 
