@@ -8,7 +8,7 @@ try {
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
   await page.getByRole('button',{name:'Add Employee',exact:true}).waitFor();
-  await page.getByText('Compliance rules matrix:',{exact:false}).click();
+  await page.getByText('Screening assumptions matrix:',{exact:false}).click();
   await page.getByRole('button',{name:'Home: Canada',exact:true}).click();
   await page.getByText('Rolling travel history required',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Add Employee',exact:true}).click();
