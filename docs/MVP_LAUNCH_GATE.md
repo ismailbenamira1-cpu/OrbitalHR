@@ -31,6 +31,14 @@
 
 - **Legal website pages staged, not published:** [Gate 5 website staging guide](GATE5_WEBSITE_LEGAL_PAGE_STAGING.md). The live footer indicates Privacy/Terms are in preparation and provides the privacy email. Public policy routes, final review and acceptance flow are not active.
 
+## Gate 6 — MVP engineering and operational readiness (15 November 2026)
+
+- No prior Gate 6 definition existed in the repository. [Gate 6 operational readiness and release/rollback runbook](GATE6_MVP_OPERATIONAL_READINESS.md) defines the limited scope, test evidence, owner-only checks and blocked launch claims.
+- Code change: read-only public deployment audit now tests invalid early-access requests, cross-origin requests, and missing Turnstile challenges in addition to existing AI authentication checks; it sends no valid leads, bearer credentials or employee data.
+- Scope: no production data migration, customer deletion, public legal-page activation or change in organization tenancy.
+- **Gate 6 technical deliverables:** staged; CI/build/browser/live audit status must be checked on the final commit and matched to actual deployed version.
+- **Gate 6 operational approval:** pending hosting administration, monitoring/alerts, incident drills, provider cost controls and confirmed rollback. This does not supersede incomplete Gate 5 legal/privacy prerequisites for real employee data.
+
 ## Engineering controls implemented
 
 - Production Vite build, Playwright smoke test, 37 Node regression tests, and Cloudflare Functions build run in GitHub Actions (consult latest run before claiming green).
