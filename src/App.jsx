@@ -198,20 +198,28 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const taxResidencyRisk = riskLabel[taxResidencyLevel];
   const ssInfo = { form: pillars.ss.rule, note: pillars.ss.detail };
 
-  const shouldGraduateToEntity = regionalHeadcount >= 5;
-  const anyBreach = PILLARS.some((k) => pillars[k].level === 'BREACH');
-  let recommendation = 'Stay on Home Payroll';
-  if (shouldGraduateToEntity || anyBreach || emp.currentSetup === 'EOR ($599/mo)' || pillars.pe.level === 'CRITICAL') {
-    recommendation = shouldGraduateToEntity
-      ? `Graduate to Local Entity (${regionalHeadcount} hires in region)`
-      : 'Graduate to Local Payroll';
-  } else if (isCliffAlert) {
-    recommendation = 'Extend Visa / Prepare Graduation';
-  }
-
+  // Compliance interventions are independent of commercial payroll planning.
+  const complianceActions = [];
+  const addAction = (risk, level, text) => complianceActions.push({ risk, level, text });
+  const visa = pillars.visa;
+  const pe = pillars.pe.subRisks.pe;
+  const tax = pillars.pe.subRisks.taxResidency;
+  const ss = pillars.ss;
+  if (rule.regionalPlaceholder) addAction('jurisdiction', 'WATCH', 'Identify actual destination country and verify national work, tax and social-security rules');
+  if (visa.reviewRequired || visa.level !== 'OK') addAction('visa', visa.level, visa.reviewRequired ? 'Record actual authorised stay' : visa.level === 'BREACH' ? 'Urgently verify immigration expiry and regularise status or depart' : 'Review immigration permission and extension or departure options');
+  if (!pe.reviewRequired && pe.level !== 'OK') addAction('pe', pe.level, 'Review employer PE exposure with corporate tax counsel');
+  if (!tax.reviewRequired && tax.level !== 'OK') addAction('taxResidency', tax.level, 'Review individual tax residency and filing obligations');
+  if (!ss.reviewRequired && ss.level !== 'OK') addAction('ss', ss.level, ss.action);
+  const severity = { OK: 0, WATCH: 1, CRITICAL: 2, BREACH: 3 };
+  complianceActions.sort((a, b) => severity[b.level] - severity[a.level]);
+  // A headcount or cost signal is only a feasibility review, never authorisation to change payroll.
+  const payrollReviewEligible = !rule.regionalPlaceholder && !complianceActions.length &&
+    (emp.currentSetup === 'EOR ($599/mo)' || (regionalHeadcount >= 5 && emp.currentSetup !== 'Local Payroll'));
+  const payrollReview = payrollReviewEligible ? (regionalHeadcount >= 5 ? 'Assess local entity feasibility' : 'Assess local payroll feasibility') : null;
+  const recommendation = complianceActions[0]?.text || payrollReview || 'Maintain current setup; verify ongoing compliance';
   const annualEorCost = eorMonthlyFee * 12;
   const annualOrbitalLocalCost = (orbitalMonthlyFee + rule.localPayrollMonthlyUSD) * 12;
-  const annualSavingsVsEor = recommendation.startsWith('Graduate')
+  const annualSavingsVsEor = payrollReviewEligible && emp.currentSetup === 'EOR ($599/mo)'
     ? Math.max(0, annualEorCost - annualOrbitalLocalCost)
     : 0;
 
@@ -232,6 +240,9 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
     taxResidencyLevel,
     ssInfo,
     recommendation,
+    complianceActions,
+    payrollReviewEligible,
+    payrollReview,
     annualEorCost,
     annualOrbitalLocalCost,
     annualSavingsVsEor,
@@ -452,7 +463,7 @@ export default function App() {
 
   const filteredEmployees = useMemo(() => {
     if (filterMode === 'CLIFF') return evaluated.filter((e) => e.isCliffAlert);
-    if (filterMode === 'GRADUATE') return evaluated.filter((e) => e.recommendation.startsWith('Graduate'));
+    if (filterMode === 'GRADUATE') return evaluated.filter((e) => e.payrollReviewEligible);
     if (filterMode === 'PE') return evaluated.filter((e) => e.peRisk !== 'LOW');
     if (filterMode === 'TAX') return evaluated.filter((e) => e.taxResidencyRisk !== 'LOW');
     return evaluated;
@@ -462,7 +473,7 @@ export default function App() {
     const cliffCount = evaluated.filter((e) => e.isCliffAlert).length;
     const peHighCount = evaluated.filter((e) => e.peRisk !== 'LOW').length;
     const taxHighCount = evaluated.filter((e) => e.taxResidencyRisk !== 'LOW').length;
-    const graduateCount = evaluated.filter((e) => e.recommendation.startsWith('Graduate')).length;
+    const graduateCount = evaluated.filter((e) => e.payrollReviewEligible).length;
     const totalAnnualSavings = evaluated.reduce((sum, e) => sum + e.annualSavingsVsEor, 0);
     return { cliffCount, peHighCount, taxHighCount, graduateCount, totalAnnualSavings };
   }, [evaluated]);
@@ -826,12 +837,12 @@ const generateAiBrief = async (employee) => {
             </div>
             <div className="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-md border border-white/15">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Net Annual Savings</p>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Potential Annual Savings</p>
                 <p className="text-2xl font-black text-emerald-400">${kpis.totalAnnualSavings.toLocaleString()}</p>
               </div>
               <div className="h-8 w-px bg-white/20"></div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Ready to Graduate</p>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Payroll feasibility reviews</p>
                 <p className="text-2xl font-black text-white">{kpis.graduateCount} Hires</p>
               </div>
             </div>
@@ -878,14 +889,14 @@ const generateAiBrief = async (employee) => {
 
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
             <div className="flex items-center justify-between text-emerald-800">
-              <span className="text-xs font-medium uppercase">Annual EOR Savings</span>
+              <span className="text-xs font-medium uppercase">Potential EOR Savings</span>
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-emerald-950">
               ${kpis.totalAnnualSavings.toLocaleString()}/yr
             </p>
             <p className="mt-1 text-xs text-emerald-800">
-              {kpis.graduateCount} hires ready to graduate from ${eorFee}/mo EOR
+              {kpis.graduateCount} feasibility reviews; savings are illustrative
             </p>
           </div>
         </div>
@@ -896,7 +907,7 @@ const generateAiBrief = async (employee) => {
             {[
               { id: 'ALL', label: `All (${evaluated.length})` },
               { id: 'CLIFF', label: `30-Day Cliff (${kpis.cliffCount})` },
-              { id: 'GRADUATE', label: `Graduate to Local (${kpis.graduateCount})` },
+              { id: 'GRADUATE', label: `Payroll Review (${kpis.graduateCount})` },
               { id: 'PE', label: `Employer PE (${kpis.peHighCount})` },
               { id: 'TAX', label: `Tax Residency (${kpis.taxHighCount})` },
             ].map((tab) => (
@@ -1070,7 +1081,7 @@ const generateAiBrief = async (employee) => {
                 <th className="px-4 py-3">Pillar 6: Visa & Stay</th>
                 <th className="px-4 py-3">Pillar 2: PE / Tax Residency</th>
                 <th className="px-4 py-3">Pillar 1: Social Security</th>
-                <th className="px-4 py-3">Graduation Action</th>
+                <th className="px-4 py-3">Compliance / Payroll Review</th>
                 <th className="px-4 py-3 text-right">Manage</th>
               </tr>
             </thead>
@@ -1103,6 +1114,7 @@ const generateAiBrief = async (employee) => {
                       <span className="inline-flex rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white">
                         {emp.recommendation}
                       </span>
+                      {emp.complianceActions.length > 1 && <ul className="mt-2 space-y-1 text-xs text-slate-700">{emp.complianceActions.slice(1).map(a => <li key={a.risk}>{a.text}</li>)}</ul>}
                     </td>
                     <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex flex-col items-end gap-2">
