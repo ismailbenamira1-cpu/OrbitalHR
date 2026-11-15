@@ -72,9 +72,10 @@ async function callClaude(env, { system, messages, maxTokens, temperature }) {
 
 async function callGemini(env, { system, messages, maxTokens }) {
   const key = env.GEMINI_API_KEY || env.API_KEY;
-  // New Gemini API projects may not have access to legacy 2.5 models.
-  // Prefer current Flash. A configured model may be tried first, then supported backups.
-  const models = [...new Set([env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.5-flash-lite'].filter(Boolean))];
+  // Production incident: Gemini 3.8 timed out on a minimal prompt, while 3.5 Flash-Lite
+  // completed on the same account. Pin this known-working model temporarily, even if
+  // Cloudflare GEMINI_MODEL still names the slow model. Do not silently retry 3.8.
+  const models = ['gemini-3.5-flash-lite'];
   const contents = messages.map((m) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
