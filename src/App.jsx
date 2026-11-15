@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ShieldAlert,
   Globe,
@@ -17,6 +17,9 @@ import {
   Database,
   Building2,
   Clock,
+  MessageSquare,
+  Send,
+  X,
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 
@@ -289,6 +292,143 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   };
 }
 
+function CopilotPanel({ roster }) {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      role: 'assistant',
+      content:
+        'Hi, I’m OrbitalCopilot. Ask me about your roster: visa day limits, PE risk, social security forms, or when to graduate someone off an EOR.',
+    },
+  ]);
+  const endRef = useRef(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, open]);
+
+  const slimRoster = roster.map((e) => ({
+    name: e.name,
+    homeCountry: e.homeCountry,
+    hostRegion: e.hostRegion,
+    role: e.role,
+    daysUsed: e.daysUsed,
+    visaLimitDays: e.rule?.visaLimitDays,
+    minDaysToCliff: e.minDaysToCliff,
+    peRisk: e.peRisk,
+    ssInfo: { form: e.ssInfo?.form },
+    recommendation: e.recommendation,
+    annualSavingsVsEor: e.annualSavingsVsEor,
+  }));
+
+  async function send(text) {
+    const q = (text ?? input).trim();
+    if (!q || busy) return;
+    const history = messages.slice(1).slice(-8).map((m) => ({ role: m.role, content: m.content }));
+    setMessages((m) => [...m, { role: 'user', content: q }]);
+    setInput('');
+    setBusy(true);
+    try {
+      const res = await fetch('/api/compliance-assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q, roster: slimRoster, history }),
+      });
+      const raw = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {}
+      const answer = data
+        ? data.success
+          ? data.answer
+          : data.error || 'Something went wrong.'
+        : `Server replied ${res.status} (${res.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`;
+      setMessages((m) => [...m, { role: 'assistant', content: answer }]);
+    } catch (err) {
+      setMessages((m) => [...m, { role: 'assistant', content: `Network problem: ${err.message}` }]);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const starters = ['Who is closest to a visa limit?', 'Who has the highest PE risk?', 'Who should we graduate off an EOR?'];
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700"
+      >
+        <MessageSquare className="h-4 w-4" /> Ask Copilot
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed bottom-6 right-6 z-50 flex h-[32rem] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <div className="flex items-center justify-between bg-indigo-600 px-4 py-3 text-white">
+        <span className="text-sm font-semibold">OrbitalCopilot</span>
+        <button onClick={() => setOpen(false)} aria-label="Close copilot">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="flex-1 space-y-3 overflow-y-auto px-3 py-3 text-sm">
+        {messages.map((m, i) => (
+          <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
+            <div
+              className={
+                'max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 ' +
+                (m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800')
+              }
+            >
+              {m.content}
+            </div>
+          </div>
+        ))}
+        {busy && <div className="text-xs text-slate-400">Thinking…</div>}
+        {messages.length === 1 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {starters.map((s) => (
+              <button
+                key={s}
+                onClick={() => send(s)}
+                className="rounded-full border border-indigo-200 px-3 py-1 text-xs text-indigo-700 hover:bg-indigo-50"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      <div className="border-t border-slate-200 p-2">
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            maxLength={1000}
+            placeholder="Ask about your roster…"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          />
+          <button
+            onClick={() => send()}
+            disabled={busy}
+            aria-label="Send"
+            className="rounded-lg bg-indigo-600 px-3 text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <p className="mt-1 px-1 text-[10px] text-slate-400">Guidance only, not legal or tax advice. Verify with an adviser.</p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
@@ -489,13 +629,14 @@ const generateAiBrief = async (employee) => {
       body: JSON.stringify({ employee }),
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      throw new Error(`Server returned HTML/Text instead of JSON. Check your _redirects file! Response: ${text.substring(0, 100)}...`);
+    const raw = await response.text();
+    let data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {}
+    if (!data) {
+      throw new Error(`Server replied ${response.status} (${response.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`);
     }
-
-    const data = await response.json();
 
     if (data.success && (data.summary || data.brief)) {
       setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary || data.brief }));
@@ -1120,6 +1261,7 @@ const generateAiBrief = async (employee) => {
           </div>
         </div>
       )}
+      <CopilotPanel roster={evaluated} />
     </div>
   );
 }
