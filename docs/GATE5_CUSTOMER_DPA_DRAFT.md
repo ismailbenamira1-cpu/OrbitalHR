@@ -49,8 +49,14 @@ Upon authorized termination or request, Service Provider shall return or delete 
 ## 9. Audit, evidence and changes
 Service Provider shall make reasonable evidence of controls and third-party compliance available subject to confidentiality and security safeguards. The scope, frequency, costs and mechanism for audits and remediation are [TO AGREE]. Notify material changes in processing and update the record of subprocessors.
 
-## 10. Limitation of use; product nature
+## 10. Customer account structure and closure scope
+The MVP currently stores user-scoped rosters rather than shared organization-owned rosters. The proposed company-level closure and up-to-30-day active-data removal are **future design objectives**, not functionality presently offered. Customer execution requires a reviewed schedule identifying the actual operator, authorized customer administrator, the records covered and an implementable deletion/return mechanism. No company-wide closure representation should be made until it has been tested.
+
+## 11. Limitation of use; product nature
 The service offers **screening and workflow alerts**, not binding immigration, tax, employment or social-security determinations. Customers must obtain qualified legal advice before relying on screening outcomes for consequential decisions. Commercial liability, indemnities, insurance and governing-law terms belong in the final services agreement and must be reviewed by counsel.
+
+## Companion drafts
+See [Terms of Service](GATE5_TERMS_OF_SERVICE_DRAFT.md), [AI and Acceptable Use](GATE5_ACCEPTABLE_USE_AI_NOTICE_DRAFT.md), [Vendor Register](GATE5_VENDOR_SUBPROCESSOR_REGISTER_DRAFT.md), and [Incident Runbook](GATE5_PRIVACY_REQUESTS_AND_INCIDENT_RUNBOOK_DRAFT.md).
 
 ## Schedule B — required controls and acceptance evidence (incomplete)
 - [x] Owner-scoped Supabase roster RLS and authenticated API access initially tested.
