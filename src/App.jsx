@@ -1,4 +1,5 @@
 import { evaluateEmployee } from './data/evaluateEmployee.js';
+import TurnstileWidget from './TurnstileWidget.jsx';
 import { reportingEmployee, buildComplianceCsv } from './data/reporting.js';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
@@ -392,6 +393,9 @@ export default function App() {
   });
   const [leadMessage, setLeadMessage] = useState('');
   const [leadConsent, setLeadConsent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [leadBusy, setLeadBusy] = useState(false);
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
   const [rosterLoadError, setRosterLoadError] = useState('');
   const lastSessionUser = useRef(null);
 
@@ -499,26 +503,36 @@ export default function App() {
 
   async function handleLeadSubmit(e) {
     e.preventDefault();
-    if (!leadForm.work_email || !leadForm.company_name || !leadConsent) return;
-    if (!supabase) { setLeadMessage('Early access registration is not configured yet.'); return; }
-
-    if (supabase) {
-      const { error } = await supabase.from('early_access_leads').insert([
-        {
-          work_email: leadForm.work_email,
-          company_name: leadForm.company_name,
-          company_size: leadForm.company_size,
-          target_countries: leadForm.target_countries,
-        },
-      ]);
-      if (error) {
-        setLeadMessage(`Could not save lead: ${error.message}`);
-        return;
+    if (!leadForm.work_email || !leadForm.company_name || !leadConsent || leadBusy) return;
+    setLeadBusy(true);
+    setLeadMessage('');
+    try {
+      if (turnstileSiteKey) {
+        if (!turnstileToken) { setLeadMessage('Complete the human verification first.'); return; }
+        const response=await fetch('/api/early-access',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({...leadForm,consent:true,turnstile_token:turnstileToken})
+        });
+        const body=await response.json();
+        if(!response.ok || !body.success) { setLeadMessage(body.error || 'Registration unavailable. Please retry.'); return; }
+      } else {
+        // LEGACY PATH (Gate 4 not activated). Remove this once Cloudflare is configured
+        // and the database revocation migration has been applied.
+        if (!supabase) { setLeadMessage('Early access registration is not configured yet.'); return; }
+        const {error}=await supabase.from('early_access_leads').insert([leadForm]);
+        if(error) { setLeadMessage('Could not save your request. Please retry later.'); return; }
       }
+      setLeadMessage('Thanks. Your early-access request was submitted.');
+      setLeadForm({work_email:'',company_name:'',company_size:'50-100',target_countries:''});
+      setLeadConsent(false);
+    } catch {
+      setLeadMessage('Registration temporarily unavailable. Please retry.');
+    } finally {
+      setLeadBusy(false);
+      setTurnstileToken('');
+      // Challenge tokens are single-use; reset by remounting only when enabled.
     }
-    setLeadMessage("Thanks. Your early-access request was submitted.");
-    setLeadForm({ work_email: '', company_name: '', company_size: '50-100', target_countries: '' });
-    setLeadConsent(false);
   }
 
   async function handleSaveEmployee(e) {
@@ -762,8 +776,10 @@ const generateAiBrief = async (employee) => {
               />
             </div>
             <label className="flex items-start gap-2 text-xs text-slate-200"><input type="checkbox" required checked={leadConsent} onChange={(e) => setLeadConsent(e.target.checked)} className="mt-1" /> I agree to be contacted about OrbitalHR early access. My work email, company details and requested countries will be stored for that purpose. Do not enter employee personal information in this form.</label>
+            {turnstileSiteKey && <TurnstileWidget key={turnstileToken ? 'verified' : 'unverified'} siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
             <button
               type="submit"
+              disabled={leadBusy || (!!turnstileSiteKey && !turnstileToken)}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
             >
               Get Early Access <ArrowRight className="h-4 w-4" />
