@@ -4,6 +4,9 @@
 
 **Status: APPROVED POLICY DECISION; NOT YET OPERATIONALLY IMPLEMENTED.** Do not represent OrbitalHR as providing automated 30-day deletion until the entire closure mechanism is deployed and tested.
 
+## Updated scope decision (15 November 2026)
+The founder chose **company/organization-level closure**, not the initially proposed login-only closure. The 30-day active-roster deletion maximum is measured from verified *organization closure*. See [GATE5_ORGANIZATION_CLOSURE_ARCHITECTURE.md](GATE5_ORGANIZATION_CLOSURE_ARCHITECTURE.md) for staged schema, authorization, testing and job requirements. Do not implement individual Auth deletion as a surrogate for company closure. Organizational closure remains **not implemented**.
+
 ## Verified current implementation
 - Authentication is via Supabase Auth, with one user id per login.
 - `public.employee_rosters.user_id` references `auth.users.id ON DELETE CASCADE`, so deleting the Auth user immediately deletes matching roster rows, **not** after 30 days.
