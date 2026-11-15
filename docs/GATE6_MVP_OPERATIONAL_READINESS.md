@@ -26,6 +26,13 @@ An explicitly limited **screening-only MVP** for fictional/test data and restric
 - [ ] Review source and build outputs for accidental secrets or developer diagnostics.
 - [ ] Confirm no migrations in Gate 6 and no production deletion requests.
 
+## Screening-scope claim audit and final acceptance
+- [Screening-scope legal review and launch acceptance report](GATE6_SCREENING_CLAIMS_AND_LAUNCH_ACCEPTANCE.md) documents corrections to unsupported marketing promises, mandatory warnings and scope of the independent legal review still required.
+- `tests/gate6-launch-claims.test.js` guards against reintroducing unsupported clearance/verified/automation language and asserts green/OK is not legal clearance.
+- Homepage warning is placed above the main dashboard content. Screening matrix is explicitly titled as assumptions; financial figures are illustrative.
+- **No legal-accuracy certification:** 42 matrix cells still need specialist review before any claim that their country-specific legal results are verified.
+- **Launch decision remains NO-GO for real identifiable employee data** due to Gate 5 approval/deletion/vendor/contract gaps and Gate 6 operator acceptance. A controlled fictional-data beta does not constitute legal validation.
+
 ## Operator-only operational acceptance
 - [ ] Cloudflare deployment matches intended source commit; verify dashboard status and environment binding.
 - [ ] Supabase and Cloudflare admin accounts protected by strong MFA and limited access.
