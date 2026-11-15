@@ -95,7 +95,7 @@ const LEVEL_STYLE = {
 function LevelBadge({ level }) {
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEVEL_STYLE[level] || LEVEL_STYLE.OK}`}>
-      {level}
+      {level === 'BREACH' ? 'ESCALATE' : level}
     </span>
   );
 }
@@ -602,7 +602,7 @@ const generateAiBrief = async (employee) => {
                   US & Canada Edition
                 </span>
               </div>
-              <p className="text-xs text-slate-500">Cross-Border Mobility Compliance & EOR Graduation</p>
+              <p className="text-xs text-slate-500">Cross-Border Mobility Screening & Risk Alerts · MVP</p>
             </div>
           </div>
 
@@ -732,7 +732,7 @@ const generateAiBrief = async (employee) => {
           </div>
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-amber-600" />
-            <span>Real-Time Permanent Establishment (PE) Risk Scoring</span>
+            <span>Employer PE Screening Alerts — Not a Legal Determination</span>
           </div>
           <div className="flex items-center gap-2">
             <Database className="h-4 w-4 text-slate-700" />
@@ -789,7 +789,7 @@ const generateAiBrief = async (employee) => {
               <AlertTriangle className="h-4 w-4 text-amber-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-amber-950">{kpis.cliffCount} Approaching Limit</p>
-            <p className="mt-1 text-xs text-amber-800">Critical or breach policy alerts across compliance tracks</p>
+            <p className="mt-1 text-xs text-amber-800">Critical or internal escalation alerts across compliance tracks</p>
           </div>
 
           <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-5">
@@ -1197,9 +1197,7 @@ const generateAiBrief = async (employee) => {
 
         {/* Legal Disclaimer */}
         <footer className="rounded-xl border border-slate-200 bg-slate-100/80 px-5 py-4 text-xs text-slate-500">
-          <strong>Compliance Notice:</strong> Country thresholds verified as of November 2026. Orbital HR provides
-          automated mobility risk flags and EOR cost modeling, not formal legal, immigration, or tax advice. Confirm
-          entity setup and certificate filings with qualified local counsel.
+          <strong>Screening-only MVP:</strong> OrbitalHR produces internal policy alerts for triage, not findings of legal breach, residence, employer PE, social-security liability or visa/work authorization. Underlying assumptions are incomplete and jurisdiction-specific verification is required. The model's ESCALATE label is an operational intervention trigger, not confirmation of a legal violation. Do not rely on these outputs to decide travel, payroll or tax filings without qualified professional review.
         </footer>
       </main>
 
