@@ -65,7 +65,7 @@ async function callClaude(env, { system, messages, maxTokens, temperature }) {
     }
     break;
   }
-  console.error('Claude API error', lastErr.status, lastErr.detail);
+  console.error('Claude API error status', lastErr.status);
   throw lastErr;
 }
 
@@ -105,7 +105,7 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
       lastErr = e;
     }
   }
-  console.error('Gemini API error', lastErr?.status, lastErr?.detail);
+  console.error('Gemini API error status', lastErr?.status);
   throw lastErr || new AIError('gemini', 0, 'no model responded');
 }
 
@@ -128,7 +128,7 @@ function friendlyError(err) {
   if (/credit balance|billing|quota|insufficient/i.test(d)) return `${who} account has no credit or quota left. Add credit or billing, then try again.`;
   if (err.status === 404 || /not found|no longer available|not supported/i.test(d)) return `${who} model name was not found. Set CLAUDE_MODEL or GEMINI_MODEL to a current model. (${d})`;
   if (err.status === 429 || err.status === 529) return `${who} is rate-limited or busy. Please try again in a minute.`;
-  return `${who} request failed (${err.status || 'network'}): ${d}`;
+  return `${who} is temporarily unavailable (${err.status || 'network'}). Please try again later or contact support.`;
 }
 
 export async function onRequest({request,env}) {
