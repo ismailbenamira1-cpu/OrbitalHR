@@ -37,7 +37,9 @@ Data may be processed outside Canada depending on actual service configuration a
 Current technical measures include authenticated AI endpoints, owner-scoped database row-level security for saved rosters, server-side validation, limited AI request quotas, Turnstile and rate-limited early-access submissions. These reduce risk but do not guarantee absolute security. Before real employee-data onboarding, verify access management, monitoring, backup/restore, incident response, vendor terms and deletion implementation.
 
 ## 8. Retention and deletion
-**POLICY DECISION — NOT YET IMPLEMENTED:** After verified account closure, employee roster records will be deleted from the active database within **30 calendar days** of closure. A secure closure workflow, access cutoff, automated deletion and completion verification have not yet been built or tested. Define separate periods for leads, security counters, AI request traces, service logs and backups; identify automated expiry and deletion workflow. Existing code does **not** establish a completed organization-wide retention/deletion program. We will retain information only as necessary for specified purposes and applicable legal duties once the schedule is implemented. Until that work is done, this notice is **not ready to publish**.
+**Current MVP:** users can delete individual saved employee records, but there is no self-service company account closure, automated organization-wide deletion or published backup-expiry schedule. 
+
+**POLICY DECISION — NOT YET IMPLEMENTED:** The founder has selected a **future company-level account closure policy** targeting deletion of organization employee records from the active database within **30 calendar days** after verified closure; this is **not yet an available service**. A secure closure workflow, access cutoff, automated deletion and completion verification have not yet been built or tested. Define separate periods for leads, security counters, AI request traces, service logs and backups; identify automated expiry and deletion workflow. Existing code does **not** establish a completed organization-wide retention/deletion program. We will retain information only as necessary for specified purposes and applicable legal duties once the schedule is implemented. Until that work is done, this notice is **not ready to publish**.
 
 ## 9. Access, correction, complaints and deletion inquiries
 Individuals may contact ismailbenamira1@gmail.com to ask about access, accuracy, corrections, applicable deletion rights, or a privacy complaint. If OrbitalHR processes an employee record on behalf of a customer, coordinate with that customer's designated representative and verify the requester's identity before disclosure. Specify response timelines and internal procedures after legal review.
@@ -45,8 +47,13 @@ Individuals may contact ismailbenamira1@gmail.com to ask about access, accuracy,
 ## 10. Breaches
 We will investigate suspected privacy/security incidents, contain harm, and make legally required notifications and records under applicable law. Define and test an incident response process before production customer use; do not claim a notification SLA that is not operationally supported.
 
-## 11. Updates
+## 11. Marketing preferences and cookies
+Early-access submissions are used to respond to requested product inquiries. Unrelated promotional mailing must rely on appropriate CASL consent or exemption, sender identification and a working opt-out. Do not infer broad newsletter consent from the existing lead form. Cloudflare Turnstile and the authentication service may use technical browser storage or request metadata as required for their functions. **Analytics, advertising cookies and any optional tracking have not yet been independently inventoried; do not publish a categorical 'no cookies' claim.**
+
+## 12. Updates
 We may update this notice to reflect changes in operators, functions and service providers. Material changes must be communicated as required by law. Publish an effective date and accessible previous versions where appropriate.
 
 ---
+**Companion internal drafts:** [Terms of Service](GATE5_TERMS_OF_SERVICE_DRAFT.md), [AI and Acceptable Use Notice](GATE5_ACCEPTABLE_USE_AI_NOTICE_DRAFT.md), [Vendor Register](GATE5_VENDOR_SUBPROCESSOR_REGISTER_DRAFT.md), [Privacy and Incident Runbook](GATE5_PRIVACY_REQUESTS_AND_INCIDENT_RUNBOOK_DRAFT.md).
+
 **Before publication:** current legal operator identity/contact, legal basis and customer roles, AI/vendor contracts and geographic processing, retention/deletion implementations, incident plan, CASL marketing consent design, jurisdiction-specific review and customer terms must be signed off. This draft itself is not evidence of compliance.
