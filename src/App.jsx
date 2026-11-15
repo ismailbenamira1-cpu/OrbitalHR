@@ -224,7 +224,7 @@ function CopilotPanel({ session, onSignIn }) {
           ? data.answer
           : data.error || 'Something went wrong.'
         : `Server replied ${res.status} (${res.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`;
-      setMessages((m) => [...m, { role: 'assistant', content: answer }]);
+      setMessages((m) => [...m, { role: 'assistant', content: data?.success && data?.mode === 'structured-screening' ? `Structured screening overview (AI response was incomplete).\n\n${answer}` : answer }]);
     } catch (err) {
       setMessages((m) => [...m, { role: 'assistant', content: `Network problem: ${err.message}` }]);
     } finally {
@@ -246,7 +246,7 @@ function CopilotPanel({ session, onSignIn }) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex h-[32rem] w-[22rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+    <div className="fixed bottom-6 right-6 z-50 flex h-[min(42rem,calc(100vh-3rem))] w-[min(38rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
       <div className="flex items-center justify-between bg-indigo-600 px-4 py-3 text-white">
         <span className="text-sm font-semibold">OrbitalCopilot</span>
         <button onClick={() => setOpen(false)} aria-label="Close copilot">
@@ -258,7 +258,7 @@ function CopilotPanel({ session, onSignIn }) {
           <div key={i} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
             <div
               className={
-                'max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 ' +
+                'max-w-[95%] whitespace-pre-wrap break-words leading-relaxed rounded-xl px-4 py-3 ' +
                 (m.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800')
               }
             >
@@ -563,7 +563,7 @@ const generateAiBrief = async (employee) => {
     }
 
     if (data.success && (data.summary || data.brief)) {
-      setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary || data.brief }));
+      setAiSummaries(prev => ({ ...prev, [employee.id]: data.mode === 'structured-screening' ? `Structured screening brief (AI response was incomplete).\n\n${data.summary || data.brief}` : data.summary || data.brief }));
     } else {
       alert("AI Brief Error: " + (data.error || "No summary returned"));
     }
@@ -1054,8 +1054,8 @@ const generateAiBrief = async (employee) => {
                         </div>
 
                         {aiSummaries[emp.id] && (
-                          <div className="w-80 max-h-96 overflow-y-auto text-left p-2.5 bg-indigo-50/95 border border-indigo-200 rounded-lg text-xs text-slate-700 whitespace-pre-line shadow-lg">
-                            <strong className="text-indigo-900 block mb-0.5 font-semibold">AI Compliance Brief:</strong>
+                          <div className="w-[min(38rem,calc(100vw-3rem))] max-h-[34rem] overflow-auto text-left p-4 bg-indigo-50/95 border border-indigo-200 rounded-lg text-sm leading-relaxed text-slate-700 whitespace-pre-wrap break-words shadow-lg">
+                            <strong className="text-indigo-900 block mb-2 font-semibold">Employee Screening Brief (AI-assisted):</strong>
                             <p>{aiSummaries[emp.id]}</p>
                           </div>
                         )}
