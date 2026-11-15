@@ -1,6 +1,6 @@
 # OrbitalHR — MVP launch gate (15 November 2026)
 
-**Decision: NOT APPROVED for public customer use.** The application is a screening/demo product, not a jurisdiction-specific legal determination engine. All 42 cells must be professionally reviewed before marketing them as verified compliance outcomes.
+**Chosen release: public MVP for compliance screening and operational risk alerts only. Public launch is NOT YET APPROVED.** This scope deliberately excludes verified advisory, automated legal determinations and claims of approval for all 42 cells. The matrix can be shown only as clearly unverified screening assumptions, with prominent limits, mandatory adviser review for consequential decisions, and a documented restricted release assessment. Professional review is required before upgrading a specific corridor to verified advice.
 
 ## Engineering controls implemented
 
@@ -37,3 +37,11 @@
 ## Suggested safe release model
 
 Private, invitation-only beta for synthetic/test data and manual adviser review of every case. Do not enable public automated compliance recommendations until the blockers above are signed off by the responsible technical, privacy and legal owners.
+
+## Launch scope decision — screening MVP
+
+**In scope:** employee roster tracking; reminders and risk-alert prioritisation; recorded stay and extension data; separate employer PE and individual tax indicators; source-confidence labels; internal screening CSV; conditional estimated EOR/payroll feasibility; AI summarisation of the user's own saved roster with explicit uncertainty.
+
+**Out of scope:** declaring a statutory breach, approving work authorisation, making tax residency determinations, certifying social-security coverage, issuing treaty forms, representing the entire matrix as legally verified, making payroll migration decisions automatically, or giving binding immigration/tax/employment advice.
+
+**Acceptance for public screening MVP:** pass production and endpoint integration, RLS isolation, AI/provider/budget tests, abuse prevention, published privacy & terms and deletion policy, support and incident controls, transparent consent and limitations, and targeted legal review of the narrowed marketing claims and safety warnings. Full professional certification of every matrix cell is **not** a blocker for a clearly restricted screening product, but unreviewed claims must remain qualified and must not be shown as definitive legal conclusions.
