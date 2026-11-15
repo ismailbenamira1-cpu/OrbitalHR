@@ -10,6 +10,7 @@ An explicitly limited **screening-only MVP** for fictional/test data and restric
 ## What was implemented
 - Existing GitHub Actions tests: Node test suite, production bundle build, browser smoke, Cloudflare Pages Functions bundling.
 - Public deployment audit now probes invalid early-access submissions, foreign-Origin requests, and missing challenge responses, in addition to anonymous/forged AI requests. Tests submit **no valid lead** and use **no employee information or secrets**.
+- GitHub Actions [Public deployment audit](../.github/workflows/live-audit.yml) now also has a daily 07:17 UTC best-effort schedule and manual dispatch; schedule may be delayed or disabled by GitHub inactivity. Check run status; configure operator notifications separately. No secret or real employee data is used in these probes.
 - Existing earlier controls: per-user RLS on saved rosters, authenticated AI generation, AI structured-data minimization, server-verified Turnstile and lead rate-limiting.
 - Staged Privacy and Terms pages remain unpublished and must not be linked as operative policies.
 
