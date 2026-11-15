@@ -58,6 +58,12 @@ The service offers **screening and workflow alerts**, not binding immigration, t
 ## Companion drafts
 See [Terms of Service](GATE5_TERMS_OF_SERVICE_DRAFT.md), [AI and Acceptable Use](GATE5_ACCEPTABLE_USE_AI_NOTICE_DRAFT.md), [Vendor Register](GATE5_VENDOR_SUBPROCESSOR_REGISTER_DRAFT.md), and [Incident Runbook](GATE5_PRIVACY_REQUESTS_AND_INCIDENT_RUNBOOK_DRAFT.md).
 
+## Additional proposed DPA attachments
+- [MVP technical and organizational security schedule](GATE5_MVP_CUSTOMER_ONBOARDING_AND_SECURITY_SCHEDULE_DRAFT.md)
+- [Interim retention and verified-erasure procedure](GATE5_INTERIM_RETENTION_AND_ERASURE_SOP_DRAFT.md)
+- [Data processing activity register](GATE5_DATA_PROCESSING_RECORD_DRAFT.md)
+These are drafts, not enforceable attachments until reviewed, completed and signed.
+
 ## Schedule B — required controls and acceptance evidence (incomplete)
 - [x] Owner-scoped Supabase roster RLS and authenticated API access initially tested.
 - [x] Turnstile, server-only lead insertion and application rate limiting tested for early-access path.
