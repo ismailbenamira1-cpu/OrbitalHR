@@ -1,7 +1,26 @@
 // src/data/corridors.js
 // OrbitalHR - Cross-Border Tax, Immigration, and Social Security Corridor Data
 // Verified and updated per Adviser Review List (Nov 2026 annotations)
-// Includes all 12 cases and explicit PE Risk Trigger Thresholds applying the 75% policy factor.
+
+export const HOMES = ["US", "Canada"];
+
+export const HOSTS = [
+  "Schengen Area",
+  "United Kingdom",
+  "Mexico",
+  "India",
+  "Philippines",
+  "Thailand",
+  "Indonesia"
+];
+
+export const PILLARS = ["visa", "tax", "socialSecurity"];
+
+export const PILLAR_TITLES = {
+  visa: "Visa & Stay Limits",
+  tax: "Tax Residency & PE Risk",
+  socialSecurity: "Social Security & CPT"
+};
 
 export const CORRIDORS = {
   "India": {
@@ -172,3 +191,29 @@ export const CORRIDORS = {
     }
   }
 };
+
+export function worstLevel(levels) {
+  if (levels.includes("HIGH") || levels.includes("CRITICAL")) return "HIGH";
+  if (levels.includes("MODERATE") || levels.includes("WATCH")) return "MODERATE";
+  return "LOW";
+}
+
+export function evaluatePillars(employee, corridorData) {
+  return {
+    visa: employee.daysUsed > (corridorData?.visa?.limitDays || 183) ? "HIGH" : "LOW",
+    tax: employee.daysUsed > (corridorData?.tax?.peAlertThresholdDays || 137) ? "HIGH" : "LOW",
+    socialSecurity: corridorData?.socialSecurity?.agreement ? "LOW" : "MODERATE"
+  };
+}
+
+export function hostSummary(hostName) {
+  return CORRIDORS[hostName] || {};
+}
+
+export function buildMatrix() {
+  const matrix = {};
+  HOSTS.forEach(host => {
+    matrix[host] = CORRIDORS[host] || {};
+  });
+  return matrix;
+}
