@@ -743,6 +743,7 @@ const generateAiBrief = async (employee) => {
 
       {/* Main Workspace */}
       <main className="mx-auto max-w-7xl space-y-6 px-6 py-8">
+        {rosterLoadError && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">{rosterLoadError}</div>}
         {/* Dynamic ROI Marketing Callout */}
         <div className="rounded-2xl border border-indigo-100 bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
