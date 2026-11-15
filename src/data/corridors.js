@@ -9,6 +9,12 @@ export const LEVELS = ['OK', 'WATCH', 'CRITICAL', 'BREACH'];
 export const PILLARS = ['ss', 'pe', 'visa'];
 export const PILLAR_TITLES = { ss: 'Pillar 1: Social Security', pe: 'Pillar 2: PE & Tax', visa: 'Pillar 6: Visa & Stay' };
 
+export const SCHENGEN_NOTICE = 'Schengen is a regional placeholder, not a single legal jurisdiction. Identify each destination country before assessing tax, PE, social security or work permission.';
+export const SCHENGEN_REVIEW = {
+  Germany: 'Review available dwelling or habitual abode.',
+  France: 'Review home, principal stay, professional activity and economic interests.',
+  Spain: 'Review day count, economic interests and family ties.',
+};
 const HOST = {
   'Schengen Area': {
     visa: { limit: 90, conf: 'verified', short: '90 days in any rolling 180 (EES biometric tracking; ETIAS expected late 2026, confirm start date)', pathway: 'Visa-free short stay, or a national remote-work / digital nomad visa where offered', milestones: [] },
@@ -91,6 +97,13 @@ export function levelFor(days, b, milestones = []) {
 export function pillarCell(home, host, pillar, { role = 'Individual Contributor', cert = 'Not filed' } = {}) {
   const h = HOST[host];
   const base = { pillar, home, host, title: PILLAR_TITLES[pillar], lastVerified: LAST_VERIFIED, milestones: [] };
+  if (host === 'Schengen Area' && pillar !== 'visa') {
+    const detail = SCHENGEN_NOTICE + ' No regional legal threshold or certificate coverage can be established. Country-specific review is required from day one.';
+    const review = { ...bounds(90), rule: 'Country-specific review required', detail, conf: 'verify', milestones: [], reviewRequired: true, lastVerified: LAST_VERIFIED };
+    // Numeric values are internal compatibility placeholders only; never use them to classify regional exposure.
+    if (pillar === 'pe') return { ...base, ...review, pePolicy: { ...review }, taxResidency: { ...review } };
+    return { ...base, ...review, covered: null };
+  }
   if (pillar === 'visa') {
     const initialLimit = h.visa.initialLimit ?? h.visa.limit;
     const extendedLimit = h.visa.extendedLimit ?? h.visa.limit;
@@ -101,7 +114,7 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     if (extensionRequiredAt && !milestones.some((m) => m.day === extensionRequiredAt)) {
       milestones.push({ day: extensionRequiredAt, lead: 7, label: h.visa.extensionDiscretionary ? 'Extension decision is discretionary: apply before this date or plan departure' : 'Extension required before this date' });
     }
-    const detail = [h.visa.pathway, `Initial authorised stay: ${initialLimit} days.`, extendedLimit > initialLimit ? `Maximum possible stay: ${extendedLimit} days${h.visa.extensionDiscretionary ? ' only if the extension is granted' : ''}.` : null, entryAssigned ? 'Use the stay actually granted at entry; the legal ceiling is not a guaranteed entitlement.' : null].filter(Boolean).join(' ');
+    const detail = [h.visa.pathway, host === 'Schengen Area' ? '90/180 is a regional short-stay rule, not permission to work. Check national work rules and rolling travel history.' : null, `Initial authorised stay: ${initialLimit} days.`, extendedLimit > initialLimit ? `Maximum possible stay: ${extendedLimit} days${h.visa.extensionDiscretionary ? ' only if the extension is granted' : ''}.` : null, entryAssigned ? 'Use the stay actually granted at entry; the legal ceiling is not a guaranteed entitlement.' : null].filter(Boolean).join(' ');
     return { ...base, ...bounds(limit), rule: h.visa.short, detail, conf: h.visa.conf, milestones, initialLimit, extendedLimit, extensionRequiredAt, extensionDiscretionary: h.visa.extensionDiscretionary ?? false, entryAssigned };
   }
   if (pillar === 'pe') {
@@ -144,6 +157,11 @@ export function evaluatePillars(emp) {
   PILLARS.forEach((p) => {
     const c = pillarCell(home, host, p, { role: emp.role, cert: emp.certificateStatus || 'Not filed' });
 
+    if (c.reviewRequired) {
+      const review = { ...c, level: 'WATCH', days, action: SCHENGEN_NOTICE };
+      out[p] = p === 'pe' ? { ...review, subRisks: { pe: { ...c.pePolicy, level: 'WATCH', days, action: SCHENGEN_NOTICE }, taxResidency: { ...c.taxResidency, level: 'WATCH', days, action: SCHENGEN_NOTICE } } } : review;
+      return;
+    }
     if (p === 'pe' && c.pePolicy && c.taxResidency) {
       const peLevel = levelFor(days, c.pePolicy, c.pePolicy.milestones);
       const taxLevel = levelFor(days, c.taxResidency, c.taxResidency.milestones);
@@ -174,7 +192,7 @@ export function evaluatePillars(emp) {
 
 export function hostSummary(host) {
   const h = HOST[host] || HOST[HOSTS[0]];
-  return { visaLimitDays: h.visa.limit, taxResidencyMilestones: h.tax.milestones || [], visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
+  return { regionalPlaceholder: host === 'Schengen Area', jurisdictionNotice: host === 'Schengen Area' ? SCHENGEN_NOTICE : null, countryReview: host === 'Schengen Area' ? SCHENGEN_REVIEW : null, visaLimitDays: h.visa.limit, taxResidencyMilestones: h.tax.milestones || [], visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
 }
 
 export const worstLevel = (ps) => PILLARS.map((p) => ps[p].level).reduce((a, b) => (rank(b) > rank(a) ? b : a), 'OK');
