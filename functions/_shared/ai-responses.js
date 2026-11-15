@@ -71,10 +71,14 @@ export function isFullRosterQuestion(query) {
 }
 export function hasRequiredBriefSections(answer) {
   const s=String(answer||'');
+  // The output must contain all seven actual sections, not just mention these topics in passing.
   return [
-    /immigration|work permission/i, /permanent establishment|employer pe/i,
-    /individual tax|tax residency/i, /social security|social-security/i,
-    /next steps|action plan|prioriti[sz]ed actions/i,
-    /payroll|eor/i, /missing|unknown|not recorded|verify/i
-  ].every(re=>re.test(s)) && s.trim().length >= 800;
+    /^\\s*1[.)]\\s*IMMIGRATION/im,
+    /^\\s*2[.)]\\s*EMPLOYER.*(?:PERMANENT ESTABLISHMENT|PE)/im,
+    /^\\s*3[.)]\\s*INDIVIDUAL TAX/im,
+    /^\\s*4[.)]\\s*SOCIAL SECURITY/im,
+    /^\\s*5[.)]\\s*PRIORITI[ZS]ED NEXT STEPS/im,
+    /^\\s*6[.)]\\s*PAYROLL/im,
+    /^\\s*7[.)]\\s*INFORMATION STILL NEEDED/im
+  ].every(re=>re.test(s)) && s.trim().length >= 1500;
 }
