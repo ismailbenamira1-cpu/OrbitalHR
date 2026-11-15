@@ -394,6 +394,7 @@ export default function App() {
   const [leadMessage, setLeadMessage] = useState('');
   const [leadConsent, setLeadConsent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileAttempt, setTurnstileAttempt] = useState(0);
   const [leadBusy, setLeadBusy] = useState(false);
   const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
   const [rosterLoadError, setRosterLoadError] = useState('');
@@ -531,7 +532,7 @@ export default function App() {
     } finally {
       setLeadBusy(false);
       setTurnstileToken('');
-      // Challenge tokens are single-use; reset by remounting only when enabled.
+      setTurnstileAttempt(n => n+1); // Tokens are single-use: re-create widget after every submission.
     }
   }
 
@@ -776,7 +777,7 @@ const generateAiBrief = async (employee) => {
               />
             </div>
             <label className="flex items-start gap-2 text-xs text-slate-200"><input type="checkbox" required checked={leadConsent} onChange={(e) => setLeadConsent(e.target.checked)} className="mt-1" /> I agree to be contacted about OrbitalHR early access. My work email, company details and requested countries will be stored for that purpose. Do not enter employee personal information in this form.</label>
-            {turnstileSiteKey && <TurnstileWidget key={turnstileToken ? 'verified' : 'unverified'} siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
+            {turnstileSiteKey && <TurnstileWidget key={turnstileAttempt} siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
             <button
               type="submit"
               disabled={leadBusy || (!!turnstileSiteKey && !turnstileToken)}
