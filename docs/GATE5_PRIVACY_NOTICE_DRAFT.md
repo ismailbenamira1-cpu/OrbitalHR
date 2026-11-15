@@ -6,7 +6,7 @@
 OrbitalHR is an international HR compliance-screening software service currently operated by **[FULL LEGAL NAME OF CURRENT INDIVIDUAL OPERATOR]**, doing business as **[REGISTERED BUSINESS NAME, IF APPLICABLE]**, at **[SERVICE ADDRESS / CONTACT ADDRESS IN ONTARIO]**. A Canadian corporation is planned but **has not yet been incorporated**. Do not represent a future corporation as the present operator.
 
 **Privacy Officer:** Founder (initial designation).  
-**Contact:** [ACTIVE, MONITORED PRIVACY EMAIL ADDRESS].  
+**Contact:** ismailbenamira1@gmail.com.  
 **Effective date after approval:** [DATE].
 
 ## 2. Scope and roles
@@ -40,7 +40,7 @@ Current technical measures include authenticated AI endpoints, owner-scoped data
 **PENDING IMPLEMENTATION:** Define and approve retention periods for accounts, rosters, leads, security counters, AI request traces, service logs and backups; identify automated expiry and deletion workflow. Existing code does **not** establish a completed organization-wide retention/deletion program. We will retain information only as necessary for specified purposes and applicable legal duties once the schedule is implemented. Until that work is done, this notice is **not ready to publish**.
 
 ## 9. Access, correction, complaints and deletion inquiries
-Individuals may contact [ACTIVE PRIVACY EMAIL] to ask about access, accuracy, corrections, applicable deletion rights, or a privacy complaint. If OrbitalHR processes an employee record on behalf of a customer, coordinate with that customer's designated representative and verify the requester's identity before disclosure. Specify response timelines and internal procedures after legal review.
+Individuals may contact ismailbenamira1@gmail.com to ask about access, accuracy, corrections, applicable deletion rights, or a privacy complaint. If OrbitalHR processes an employee record on behalf of a customer, coordinate with that customer's designated representative and verify the requester's identity before disclosure. Specify response timelines and internal procedures after legal review.
 
 ## 10. Breaches
 We will investigate suspected privacy/security incidents, contain harm, and make legally required notifications and records under applicable law. Define and test an incident response process before production customer use; do not claim a notification SLA that is not operationally supported.
