@@ -12,7 +12,7 @@ export const PILLAR_TITLES = { ss: 'Pillar 1: Social Security', pe: 'Pillar 2: P
 const HOST = {
   'Schengen Area': {
     visa: { limit: 90, conf: 'verified', short: '90 days in any rolling 180 (EES biometric tracking; ETIAS expected late 2026, confirm start date)', pathway: 'Visa-free short stay, or a national remote-work / digital nomad visa where offered', milestones: [] },
-    tax: { T: 183, conf: 'secondary', short: 'Usually 183 days per tax year, but each member state sets its own tests (a permanent home or family ties can create residency from day one)' },
+    tax: { T: 183, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Germany, France and Spain are suggested first states to model: none is a pure 183-day test. Germany can trigger on an available dwelling or habitual abode; France on home/principal stay, principal professional activity or economic interests; Spain on 183+ days, economic interests, or family ties.', prompt: 'Ask about an available home, family location and centre of income/economic interests; model country-specific triggers rather than relying on 183 days alone.', src: 'Secondary review; statutes not directly read' },
     peBase: 'High', payroll: 145, entity: 4500,
   },
   'United Kingdom': {
@@ -21,28 +21,28 @@ const HOST = {
     peBase: 'High', payroll: 130, entity: 2800,
   },
   Mexico: {
-    visa: { limit: 180, conf: 'secondary', short: 'Up to 180 days on a visitor permit (FMM), at the immigration officer’s discretion; visitor status does not allow local work', pathway: 'Visitor (FMM) or Temporary Resident visa (Residente Temporal) for longer stays', milestones: [] },
-    tax: { T: 183, conf: 'secondary', short: 'Resident if the main home is in Mexico or the center of vital interests is there; 183+ days is the usual treaty marker', milestones: [] },
+    visa: { limit: 180, conf: 'verified', short: '180 days is the legal ceiling, not a safe planning limit: the immigration officer sets the days at entry (often fewer). Track the days printed on the FMM or digital FMM; no paid work in Mexico.', pathway: 'Visitor (FMM) or Temporary Resident visa (Residente Temporal) for longer stays', milestones: [] },
+    tax: { T: 183, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Mexico has no domestic day-count test for individuals. Residence depends on a Mexican home and, if another home exists, the centre of vital interests (including Mexican-source income or main professional activities). Treat 183 days only as a treaty marker.', prompt: 'Flag from day one if the person owns or rents a Mexican home, relocates family, earns over 50% of income from Mexican sources, or has a Mexican professional base.', src: 'CFF art. 9 reproduced sources; secondary corroboration', milestones: [] },
     peBase: 'High', payroll: 110, entity: 3200,
   },
   India: {
-    visa: { limit: 180, conf: 'verify', short: 'e-Visa required (no visa-free entry). Stay per visit depends on visa type, commonly up to 180 days on e-Business; local work is not allowed', pathway: 'e-Business visa for visits; Employment visa for local hires (no digital nomad visa)', milestones: [] },
-    tax: { T: 182, conf: 'verify', short: '182+ days in the Indian financial year (Apr 1 to Mar 31), or 60 days plus 365 days over the prior 4 years; service-PE rules are applied firmly', milestones: [] },
+    visa: { limit: 180, conf: 'verified', short: '180 days continuous per visit for US and Canadian citizens on the relevant e-Visa routes; FRRO registration is required beyond 180 days. 1-year/5-year e-Tourist visas are also capped at 180 days per calendar year. e-Visa is not valid for employment, and remote work is not expressly permitted.', pathway: 'e-Business visa for visits; Employment visa for local hires (no digital nomad visa)', milestones: [] },
+    tax: { T: 182, alertT: 90, conf: 'verified', peConf: 'secondary', short: 'Resident if 182+ days in the Indian tax year, or 60+ days plus 365+ days in the preceding four years; special 120-day and deemed-residency rules can apply to certain Indian citizens/PIOs. Treaty service-PE risk is reported above 90 days in any 12 months for US and Canada cases.', src: 'Income-tax Act 2025 / Income Tax Department FAQ; treaty PE threshold from secondary sources', milestones: [] },
     peBase: 'High', payroll: 95, entity: 3800,
   },
   Philippines: {
     visa: { limit: 59, conf: 'secondary', short: '30 days visa-free on arrival, extendable at the Bureau of Immigration to 59 days; extension must be filed before day 30', pathway: '9A tourist extension or 9G pre-arranged employment visa', milestones: [{ day: 30, lead: 7, label: 'File Bureau of Immigration extension before day 30' }] },
-    tax: { T: 180, conf: 'verify', short: 'Over 180 days in a calendar year changes an alien’s tax status; pay for work performed in the Philippines is treated as Philippine-source income', milestones: [] },
+    tax: { T: 180, alertT: 90, conf: 'secondary', peConf: 'secondary', short: 'Compensation for services performed in the Philippines is Philippine-source and can be taxable from day one. 180 days changes the domestic tax treatment; treaty relief is narrower and the US threshold needs professional confirmation (90 vs 183 days reported by sources).', src: 'NIRC/BIR guidance via professional summaries; treaty threshold secondary', milestones: [] },
     peBase: 'Moderate', payroll: 90, entity: 3500,
   },
   Thailand: {
-    visa: { limit: 60, conf: 'secondary', short: 'Visa-free stay cut to 30 days from 15 Sep 2026 for many nationalities, extendable once by 30 days (60 total); confirm current list', pathway: 'Destination Thailand Visa (DTV, up to 180 days per entry) or Non-Immigrant B with work permit', milestones: [{ day: 30, lead: 7, label: 'Extend stay before day 30 or exit' }] },
-    tax: { T: 180, conf: 'secondary', short: '180+ days in a calendar year makes a person Thai tax resident; foreign income remitted to Thailand is taxable for residents since 2024', milestones: [] },
+    visa: { limit: 60, conf: 'verified', short: 'US and Canadian citizens have 30 days visa-free from 15 Sep 2026 for tourism only, with 20,000 THB funds per person (40,000 per family). An extension of up to 30 days is solely at the immigration officer’s discretion.', pathway: 'Destination Thailand Visa (DTV, up to 180 days per entry) or Non-Immigrant B with work permit', milestones: [{ day: 30, lead: 7, label: 'Extend stay before day 30 or exit' }] },
+    tax: { T: 180, alertT: 180, conf: 'secondary', peConf: 'secondary', short: '180+ days makes a person Thai tax resident. Foreign income earned on or after 1 Jan 2024 while resident is taxable when remitted in any year; income earned before 2024 or in a non-resident year is not taxed on remittance. Proposed remittance relief remains draft.', src: 'Revenue Department orders via law-firm trackers', milestones: [] },
     peBase: 'Moderate', payroll: 100, entity: 3600,
   },
   Indonesia: {
     visa: { limit: 60, conf: 'secondary', short: 'Visa on arrival: 30 days, extendable once by 30 days (60 total); tourist status does not allow work', pathway: 'E33G remote worker KITAS or PT PMA with work KITAS', milestones: [{ day: 30, lead: 7, label: 'Extend visa on arrival before day 30' }] },
-    tax: { T: 183, conf: 'verify', short: 'Over 183 days in any 12-month period, or intent to stay, makes a person Indonesian tax resident', milestones: [] },
+    tax: { T: 183, alertT: 120, conf: 'verified', peConf: 'secondary', short: 'Resident if present more than 183 days in any 12 months, or present during the tax year with intent to reside; intent can be evidenced by a qualifying permit, visa, contract, lease or family relocation. Treaty service-PE and employment tests use 120 days in the reviewed US/Canada materials.', src: 'DGT residency guidance; treaty threshold secondary', milestones: [] },
     peBase: 'High', payroll: 95, entity: 4200,
   },
 };
@@ -55,7 +55,7 @@ const HOME_TAX = {
 const NONE = (host) => ({ covered: false, form: 'No agreement in force', months: 0, conf: 'verified', note: `No social security agreement with ${host}: dual contributions are possible if host coverage applies.` });
 const SS = {
   'United States': {
-    'Schengen Area': { covered: true, form: 'SSA Certificate of Coverage (online request)', months: 60, conf: 'secondary', note: 'The US has agreements with most, not all, Schengen states (usually up to 5 years). Confirm your specific country.' },
+    'Schengen Area': { covered: true, form: 'SSA Certificate of Coverage (online request)', months: 60, conf: 'secondary', note: 'US agreements cover many Schengen states, generally with detached-worker rules up to 5 years. The reviewed non-agreement states are Bulgaria, Croatia, Estonia, Latvia, Liechtenstein, Lithuania and Malta; Romania entered into force 1 Sep 2026. Confirm the specific country and current SSA list.' },
     'United Kingdom': { covered: true, form: 'SSA Certificate of Coverage (online request)', months: 60, conf: 'secondary', note: 'US-UK agreement covers temporary assignments of up to 5 years.' },
     Mexico: NONE('Mexico'), India: NONE('India'), Philippines: NONE('the Philippines'), Thailand: NONE('Thailand'), Indonesia: NONE('Indonesia'),
   },
@@ -91,9 +91,14 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     return { ...base, ...bounds(h.visa.limit), rule: h.visa.short, detail: h.visa.pathway, conf: h.visa.conf, milestones: h.visa.milestones };
   }
   if (pillar === 'pe') {
-    const A = h.peBase === 'High' ? Math.round(h.tax.T * 0.75) : h.tax.T;
-    const limit = Math.min(h.tax.T, Math.max(15, Math.round(A * (ROLE_FACTOR[role] ?? 1))));
-    return { ...base, ...bounds(limit), rule: h.tax.short, detail: `Base PE risk: ${h.peBase}. Role "${role}" sets the alert limit to ${limit} days. ${HOME_TAX[home]}`, conf: h.tax.conf, milestones: h.tax.milestones || [] };
+    const alertT = h.tax.alertT ?? h.tax.T;
+    const A = h.peBase === 'High' ? Math.round(alertT * 0.75) : alertT;
+    const limit = Math.min(alertT, Math.max(15, Math.round(A * (ROLE_FACTOR[role] ?? 1))));
+    const detailParts = [`Base PE risk: ${h.peBase}. Alert base: ${alertT} days. Role "${role}" sets the alert limit to ${limit} days.`];
+    if (h.tax.prompt) detailParts.push(`Review prompt: ${h.tax.prompt}`);
+    if (h.tax.src) detailParts.push(`Sources: ${h.tax.src}`);
+    detailParts.push(HOME_TAX[home]);
+    return { ...base, ...bounds(limit), rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: h.tax.milestones || [] };
   }
   const s = SS[home][host];
   if (s.covered) {
@@ -127,7 +132,7 @@ export function evaluatePillars(emp) {
 
 export function hostSummary(host) {
   const h = HOST[host] || HOST[HOSTS[0]];
-  return { visaLimitDays: h.visa.limit, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, taxRuleShort: h.tax.short, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
+  return { visaLimitDays: h.visa.limit, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
 }
 
 export const worstLevel = (ps) => PILLARS.map((p) => ps[p].level).reduce((a, b) => (rank(b) > rank(a) ? b : a), 'OK');
