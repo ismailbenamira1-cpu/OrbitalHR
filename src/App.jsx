@@ -98,6 +98,11 @@ function LevelBadge({ level }) {
   );
 }
 
+function ConfidenceBadge({ conf }) {
+  const styles = { verified: 'bg-emerald-50 text-emerald-700', secondary: 'bg-amber-50 text-amber-700', verify: 'bg-rose-50 text-rose-700' };
+  return <span className={`rounded px-1.5 py-0.5 ${styles[conf] || styles.verify}`}>{conf}</span>;
+}
+
 function PillarMeter({ p }) {
   return (
     <div className="mt-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700">
@@ -156,7 +161,7 @@ function MatrixPanel() {
                       <div className="mt-1 font-semibold text-indigo-700">
                         Watch {c.watchAt} · Critical {c.criticalAt} · Limit {c.limit}d
                       </div>
-                      <div className="text-[10px] uppercase text-slate-400">{c.conf}</div>
+                      <div className="text-[10px] uppercase text-slate-400"><ConfidenceBadge conf={c.conf} /></div>
                     </td>
                   );
                 })}
@@ -167,7 +172,7 @@ function MatrixPanel() {
       </div>
       <p className="mt-3 text-[11px] text-slate-500">
         Alert days are Orbital policy settings built on the stay or residency limit (watch at about 67%, critical about 17% before the limit). Social security days
-        depend on the certificate status. Tax and PE days shrink for sales, executive and manager roles. Verify each cell with local counsel.
+        depend on the certificate status. PE alerts use the host's dedicated PE alert base where one is configured (which can differ from the tax-residency threshold); role factors then apply. Verify each cell with local counsel.
       </p>
     </details>
   );
@@ -180,6 +185,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
 
   const visaDaysLeft = pillars.visa.limit - emp.daysUsed;
   const taxDaysLeft = pillars.pe.limit - emp.daysUsed;
+  const peAlertBaseDays = rule.peAlertBaseDays;
   const minDaysToCliff = Math.min(...PILLARS.map((k) => pillars[k].limit - emp.daysUsed));
   const worst = worstLevel(pillars);
   const isCliffAlert = worst === 'CRITICAL' || worst === 'BREACH';
@@ -210,6 +216,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
     regionalHeadcount,
     visaDaysLeft,
     taxDaysLeft,
+    peAlertBaseDays,
     minDaysToCliff,
     isCliffAlert,
     peRisk,
@@ -1095,6 +1102,19 @@ const generateAiBrief = async (employee) => {
               <p className="text-xs text-slate-600">
                 {selectedEmployee.pillars.pe.detail}
               </p>
+              {selectedEmployee.rule.peAlertBaseDays !== selectedEmployee.rule.taxResidencyDays && (
+                <p className="text-xs font-semibold text-amber-700">
+                  PE alert base: {selectedEmployee.rule.peAlertBaseDays} days · Tax-residency reference: {selectedEmployee.rule.taxResidencyDays} days
+                </p>
+              )}
+              {selectedEmployee.rule.taxPrompt && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+                  <strong>Review prompt:</strong> {selectedEmployee.rule.taxPrompt}
+                </div>
+              )}
+              {selectedEmployee.rule.sources && (
+                <p className="text-[11px] text-slate-500"><strong>Evidence:</strong> {selectedEmployee.rule.sources}</p>
+              )}
               <PillarMeter p={selectedEmployee.pillars.pe} />
             </div>
 
