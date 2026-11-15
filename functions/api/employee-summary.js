@@ -162,17 +162,17 @@ export async function onRequest({ request, env }) {
 - PE risk level: ${s(employee.peRisk, 'Moderate')}
 - Social security form: ${s(employee.ssInfo?.form, 'Check bilateral agreement')}
 
-Use markdown with these sections:
+Write in plain text with no markdown symbols (no #, no asterisks). Use these four numbered sections, each with a short heading line followed by 2-4 complete sentences:
 1. Executive Summary and Tax Risk
 2. Immigration and Day-Count Velocity
 3. Social Security and Payroll Compliance
-4. Recommended Action Items (3 bullets)
-Keep it under 250 words. Note that rules should be verified with a tax adviser or immigration lawyer.`;
+4. Recommended Action Items (3 short bullet lines starting with a dash)
+Keep it under 350 words and always finish every section. End with one sentence saying these rules should be verified with a tax adviser or immigration lawyer.`;
 
     const text = await callAI(env, {
       system: 'You are a cross-border HR and corporate tax compliance analyst for Orbital HR. Give guidance, not legal advice. Never invent facts beyond the data given.',
       messages: [{ role: 'user', content: prompt }],
-      maxTokens: 800,
+      maxTokens: 3000,
       temperature: 0.3,
     });
     return reply({ success: true, summary: text, brief: text });

@@ -120,7 +120,7 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
 
 // Uses Claude if ANTHROPIC_API_KEY is set, otherwise falls back to Gemini.
 async function callAI(env, opts) {
-  const o = { maxTokens: 700, temperature: 0.3, ...opts };
+  const o = { maxTokens: 2000, temperature: 0.3, ...opts };
   if (env.ANTHROPIC_API_KEY) return callClaude(env, o);
   if (env.GEMINI_API_KEY || env.API_KEY) return callGemini(env, o);
   throw new Error('NO_KEY');
@@ -182,7 +182,7 @@ Rules:
     const answer = await callAI(env, {
       system,
       messages: [...history, { role: 'user', content: query }],
-      maxTokens: 700,
+      maxTokens: 2000,
       temperature: 0.3,
     });
     return reply({ success: true, answer });
