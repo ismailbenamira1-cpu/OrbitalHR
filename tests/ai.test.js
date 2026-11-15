@@ -45,7 +45,7 @@ test('server-owned roster and authenticated AI contract',async()=>{
       const payload=JSON.parse(prompt.messages.at(-1).content);
       assert.equal(payload.employee?.name ?? payload.roster[0].name,'Server-owned employee');
       assert.ok(!JSON.stringify(payload).includes('Forged employee'));
-      assert.match(prompt.system,/Tax residency is not a (violation|breach)/i);
+      assert.match(prompt.system,/tax (?:residence|residency) is not a breach/i);
     }
   }finally{globalThis.fetch=previous;}
 });
@@ -66,5 +66,39 @@ test('unauthenticated, cross-site, expired, quota denied and wrong employee fail
     assert.equal(r.status,404);
     r=await copilot({request:req({query:'hello'}),env:{}});assert.equal(r.status,503);
     r=await brief({request:req({employeeId:'demo-1'}),env});assert.equal(r.status,400);
+  }finally{globalThis.fetch=previous;}
+});
+
+test('incomplete employee AI output falls back to a comprehensive, source-grounded brief',async()=>{
+  const previous=globalThis.fetch;
+  try{
+    const net=mockNetwork();globalThis.fetch=net.fake;
+    const response=await brief({request:req({employeeId:ID}),env});
+    assert.equal(response.status,200);
+    const data=await response.json();
+    assert.equal(data.mode,'structured-screening');
+    assert.equal(data.success,true);
+    for(const heading of ['IMMIGRATION & WORK PERMISSION','EMPLOYER PERMANENT ESTABLISHMENT','INDIVIDUAL TAX RESIDENCY','SOCIAL SECURITY','PRIORITIZED NEXT STEPS','PAYROLL & EOR FEASIBILITY','INFORMATION STILL NEEDED']){
+      assert.ok(data.summary.includes(heading),'Missing '+heading);
+    }
+    assert.match(data.summary,/Server-owned employee/);
+    assert.match(data.summary,/Certificate status:/);
+    assert.match(data.summary,/HOLD:/);
+    assert.doesNotMatch(data.summary,/forged employee/i);
+  }finally{globalThis.fetch=previous;}
+});
+test('a generic roster answer is replaced with each saved employee and all four screening tracks',async()=>{
+  const previous=globalThis.fetch;
+  try{
+    const net=mockNetwork();globalThis.fetch=net.fake;
+    const response=await copilot({request:req({query:'Which employees in my saved roster require compliance review? Explain immigration, employer PE, individual tax residency and social security separately.'}),env});
+    const data=await response.json();
+    assert.equal(data.success,true);
+    assert.equal(data.mode,'structured-screening');
+    for(const label of ['Server-owned employee','Immigration:','Employer PE:','Individual tax residency:','Social security:','Next action:','Payroll:','MISSING INFORMATION']){
+      assert.ok(data.answer.includes(label),'Missing '+label);
+    }
+    assert.ok(data.answer.length>1200,'Roster assessment should be substantive');
+    assert.doesNotMatch(data.answer,/forged employee/i);
   }finally{globalThis.fetch=previous;}
 });
