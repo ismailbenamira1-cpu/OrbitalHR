@@ -58,6 +58,9 @@ if (!home.response) {
     const crossSite=await probe(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer invalid-gate3-token',Origin:'https://untrusted.invalid'},body:validBody});
     note(path+' rejects cross-origin POST',crossSite.response?.status===403,'status '+(crossSite.response?.status??crossSite.error));
   }
+  // No auth token: the Gemini diagnostics endpoint must remain unavailable to visitors.
+  const health=await probe('/api/ai-diagnostic');
+  note('/api/ai-diagnostic requires authentication',health.response?.status===401,'status '+(health.response?.status??health.error));
   console.log(JSON.stringify({verdict,checks:rows},null,2));
   if(verdict!=='PASS')process.exitCode=1;
 }
