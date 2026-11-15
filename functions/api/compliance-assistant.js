@@ -170,6 +170,10 @@ export async function onRequest({ request, env }) {
     const complete=!broadReview || (hasRequiredBriefSections(answer) && owned.employees.every(e=>answer.toLowerCase().includes(String(e.name||'').toLowerCase())));
     return reply({success:true,answer:complete?answer:screeningRosterOverview(owned.employees),mode:complete?'ai':'structured-screening'});
   } catch(err) {
+    if ((err?.detail === 'TIMEOUT' || err?.detail === 'CONNECTION_FAILED') && broadReview) {
+      console.error('compliance-assistant provider unavailable', {status:0, category:err.detail});
+      return reply({success:true,answer:screeningRosterOverview(owned.employees),mode:'offline-screening',providerAvailable:false,notice:'Live Gemini generation is unavailable. This overview was produced by OrbitalHR screening rules, not by the AI provider. It is not legal advice.'});
+    }
     console.error('compliance-assistant failed:',err.message);
     return reply({success:false,error:friendlyError(err)},503);
   }
