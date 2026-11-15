@@ -181,7 +181,7 @@ function MatrixPanel() {
   );
 }
 
-function CopilotPanel({ roster }) {
+function CopilotPanel({ session, onSignIn }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -198,20 +198,21 @@ function CopilotPanel({ roster }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
-  const slimRoster = roster.map(reportingEmployee);
-
   async function send(text) {
     const q = (text ?? input).trim();
     if (!q || busy) return;
+    if (!session) { onSignIn(); return; }
     const history = messages.slice(1).slice(-8).map((m) => ({ role: m.role, content: m.content }));
     setMessages((m) => [...m, { role: 'user', content: q }]);
     setInput('');
     setBusy(true);
     try {
+      const { data: refreshed, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !refreshed.session?.access_token) throw new Error('Sign in again to use Copilot.');
       const res = await fetch('/api/compliance-assistant', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, roster: slimRoster, history }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${refreshed.session.access_token}` },
+        body: JSON.stringify({ query: q, history }),
       });
       const raw = await res.text();
       let data = null;
@@ -236,7 +237,7 @@ function CopilotPanel({ roster }) {
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={() => session ? setOpen(true) : onSignIn()}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg hover:bg-indigo-700"
       >
         <MessageSquare className="h-4 w-4" /> Ask Copilot
@@ -300,7 +301,7 @@ function CopilotPanel({ roster }) {
             <Send className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-1 px-1 text-[10px] text-slate-400">Guidance only, not legal or tax advice. Verify with an adviser.</p>
+        <p className="mt-1 px-1 text-[10px] text-slate-400">Your saved employee data is sent to the configured AI provider to answer your request. Avoid submitting unnecessary personal information. AI output is not legal advice.</p>
       </div>
     </div>
   );
@@ -336,6 +337,7 @@ export default function App() {
     target_countries: '',
   });
   const [leadMessage, setLeadMessage] = useState('');
+  const [leadConsent, setLeadConsent] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -355,7 +357,7 @@ export default function App() {
       .select('*')
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           const mapped = data.map((row) => ({
             id: row.id,
             name: row.employee_name,
@@ -370,7 +372,7 @@ export default function App() {
             visaExtendedDays: row.visa_extended_days ?? null,
           }));
           setEmployees(mapped);
-          setSelectedId(mapped[0].id);
+          setSelectedId(mapped[0]?.id ?? null);
         }
       });
   }, [session]);
@@ -422,7 +424,8 @@ export default function App() {
 
   async function handleLeadSubmit(e) {
     e.preventDefault();
-    if (!leadForm.work_email || !leadForm.company_name) return;
+    if (!leadForm.work_email || !leadForm.company_name || !leadConsent) return;
+    if (!supabase) { setLeadMessage('Early access registration is not configured yet.'); return; }
 
     if (supabase) {
       const { error } = await supabase.from('early_access_leads').insert([
@@ -440,6 +443,7 @@ export default function App() {
     }
     setLeadMessage(`Saved! We'll reach out to ${leadForm.work_email} with early-access onboarding.`);
     setLeadForm({ work_email: '', company_name: '', company_size: '50-100', target_countries: '' });
+    setLeadConsent(false);
   }
 
   async function handleSaveEmployee(e) {
@@ -514,12 +518,16 @@ export default function App() {
 const [loadingId, setLoadingId] = useState(null);
 
 const generateAiBrief = async (employee) => {
+  if (!session) { setShowAuthModal(true); return; }
+  if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/.test(String(employee.id))) { alert('Save this employee to your signed-in roster before requesting an AI brief.'); return; }
   setLoadingId(employee.id);
   try {
+    const { data: refreshed, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !refreshed.session?.access_token) throw new Error('Sign in again to request a brief.');
     const response = await fetch('/api/employee-summary', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ employee: reportingEmployee(employee) }),
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${refreshed.session.access_token}` },
+      body: JSON.stringify({ employeeId: employee.id }),
     });
 
     const raw = await response.text();
@@ -1200,7 +1208,7 @@ const generateAiBrief = async (employee) => {
           </div>
         </div>
       )}
-      <CopilotPanel roster={evaluated} />
+      <CopilotPanel session={session} onSignIn={() => setShowAuthModal(true)} />
     </div>
   );
 }
