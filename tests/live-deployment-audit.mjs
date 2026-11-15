@@ -36,6 +36,8 @@ if (!home.response) {
     const js=await probe(asset);
     note('JS bundle exists',js.response?.status===200 && js.contentType.includes('javascript'));
     if(js.body){
+      const frontendSupabaseConfigured = /https:\\/\\/[a-z0-9-]+\\.supabase\\.co/.test(js.body);
+      note('Frontend Supabase URL embedded in production bundle',frontendSupabaseConfigured,frontendSupabaseConfigured?'Project URL configured':'Frontend build has no recognizable Supabase project URL');
       const screens=['Cross-Border Mobility Screening','Screening-only MVP','sign in to save'];
       for(const marker of screens)note('Latest MVP text: '+marker,js.body.includes(marker));
     }
