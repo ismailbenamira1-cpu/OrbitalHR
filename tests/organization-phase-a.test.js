@@ -24,7 +24,7 @@ test('Existing roster columns, user grants and ownership policies stay unchanged
   assert.ok(sql.includes('references public.organizations(id) on delete restrict'));
   assert.doesNotMatch(sql,/drop\s+(table|column|policy)|truncate\s+|delete\s+from\s+|update\s+public\.employee_rosters|alter\s+table\s+public\.employee_rosters\s+disable\s+row\s+level\s+security/i);
   assert.doesNotMatch(sql,/revoke\s+(all|select|insert|update|delete)\s+on\s+(table\s+)?public\.employee_rosters/i);
-  assert.match(sql,/add column if not exists organization_id uuid references public\\.organizations/);
+  assert.ok(sql.includes('add column if not exists organization_id uuid references public.organizations(id) on delete restrict'));
   assert.match(sql,/before insert or update on public\.employee_rosters/);
   assert.match(sql,/current_user in \('anon','authenticated'\)/);
 });
