@@ -15,7 +15,7 @@ export async function onRequest({ request, env }) {
   const countries=typeof p.target_countries==='string'?p.target_countries.trim():'';
   const token=typeof p.turnstile_token==='string'?p.turnstile_token:'';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length>254 ||
-      company.length<2 || company.length>150 || !['1-10','11-50','50-100','101-500','500+'].includes(size) ||
+      company.length<2 || company.length>150 || !['50-100','101-250','251-500','500+'].includes(size) ||
       countries.length>300 || !p.consent)
     return apiReply({success:false,error:'Please enter valid business details and agree to contact.'},400);
   if(token.length<10 || token.length>2048)
