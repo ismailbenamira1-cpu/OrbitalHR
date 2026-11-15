@@ -91,7 +91,7 @@ async function callGemini(env, { system, messages, maxTokens }) {
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents,
-            generationConfig: { maxOutputTokens: maxTokens, thinkingConfig: { thinkingLevel: model === 'gemini-3.5-flash-lite' ? 'MINIMAL' : 'LOW' } },
+            generationConfig: { maxOutputTokens: maxTokens, thinkingConfig: { thinkingLevel: model === 'gemini-3.5-flash-lite' ? 'minimal' : 'low' } },
           }),
         }
       );
