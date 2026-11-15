@@ -9,7 +9,7 @@ async function probe(path, init = {}) {
   try {
     const response = await fetch(new URL(path, base), { ...init, redirect: 'follow', signal: controller.signal, headers: { ...(init.headers || {}), 'Cache-Control': 'no-cache' } });
     const contentType = response.headers.get('content-type') || '';
-    const body = (await response.text()).slice(0, 150000);
+    const body = (await response.text()).slice(0, 1200000);
     rows.push({ path, status: response.status, contentType, redirected: response.redirected, url: response.url });
     return { response, body, contentType };
   } catch (e) {
