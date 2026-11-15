@@ -441,7 +441,7 @@ export default function App() {
         return;
       }
     }
-    setLeadMessage(`Saved! We'll reach out to ${leadForm.work_email} with early-access onboarding.`);
+    setLeadMessage("Thanks. Your early-access request was submitted.");
     setLeadForm({ work_email: '', company_name: '', company_size: '50-100', target_countries: '' });
     setLeadConsent(false);
   }
@@ -650,6 +650,7 @@ const generateAiBrief = async (employee) => {
               <input
                 type="email"
                 required
+                maxLength={254}
                 placeholder="Work email (CFO / HR)"
                 value={leadForm.work_email}
                 onChange={(e) => setLeadForm({ ...leadForm, work_email: e.target.value })}
@@ -658,6 +659,7 @@ const generateAiBrief = async (employee) => {
               <input
                 type="text"
                 required
+                maxLength={120}
                 placeholder="Company name"
                 value={leadForm.company_name}
                 onChange={(e) => setLeadForm({ ...leadForm, company_name: e.target.value })}
@@ -675,12 +677,14 @@ const generateAiBrief = async (employee) => {
               </select>
               <input
                 type="text"
+                maxLength={200}
                 placeholder="Host countries (e.g. UK, India)"
                 value={leadForm.target_countries}
                 onChange={(e) => setLeadForm({ ...leadForm, target_countries: e.target.value })}
                 className="rounded-lg border border-white/20 bg-slate-900/70 px-3 py-2 text-sm text-white placeholder-slate-400"
               />
             </div>
+            <label className="flex items-start gap-2 text-xs text-slate-200"><input type="checkbox" required checked={leadConsent} onChange={(e) => setLeadConsent(e.target.checked)} className="mt-1" /> I agree to be contacted about OrbitalHR early access. My work email, company details and requested countries will be stored for that purpose. Do not enter employee personal information in this form.</label>
             <button
               type="submit"
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-400"
