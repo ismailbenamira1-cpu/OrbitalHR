@@ -54,3 +54,57 @@ test('Gate 4 rejects failed or mismatched Turnstile tokens before database write
   }
  }finally{globalThis.fetch=original;}
 });
+
+test('Gate 4 rate limiter allows verified lead only after server-only atomic RPC',async()=>{
+ const previous=globalThis.fetch;const sent=[];
+ try{
+  globalThis.fetch=async(url,init)=>{
+   sent.push({url:String(url),init});
+   if(String(url).includes('/siteverify'))return Response.json({success:true,hostname:'orbitalhr.pages.dev',action:'early_access'});
+   if(String(url).includes('/rpc/consume_lead_rate_limit'))return Response.json(true);
+   if(String(url).includes('/rest/v1/early_access_leads'))return new Response(null,{status:201});
+   throw Error('unexpected request');
+  };
+  const request=req(payload,{'CF-Connecting-IP':'203.0.113.11'});
+  const res=await onRequest({request,env:{...env,LEAD_RATE_LIMIT_ENABLED:'true'}});
+  assert.equal(res.status,201);
+  assert.equal(sent.length,3);
+  const check=JSON.parse(sent[1].init.body);
+  assert.match(check.p_ip_hash,/^[0-9a-f]{64}$/);
+  assert.match(check.p_email_hash,/^[0-9a-f]{64}$/);
+  assert.notEqual(check.p_ip_hash,check.p_email_hash);
+  assert.doesNotMatch(JSON.stringify(check),/203\.0\.113\.11|person@example\.com/);
+  assert.ok(sent[2].url.includes('early_access_leads'));
+ }finally{globalThis.fetch=previous;}
+});
+test('Gate 4 rate limiter returns 429 and prevents any insert when exhausted',async()=>{
+ const previous=globalThis.fetch;let writes=0;
+ try{
+  globalThis.fetch=async(url)=>{
+   if(String(url).includes('/siteverify'))return Response.json({success:true,hostname:'orbitalhr.pages.dev',action:'early_access'});
+   if(String(url).includes('/rpc/consume_lead_rate_limit'))return Response.json(false);
+   if(String(url).includes('/rest/v1/early_access_leads')){writes++;throw Error('unexpected insert');}
+   throw Error('unexpected request');
+  };
+  const res=await onRequest({request:req(payload,{'CF-Connecting-IP':'203.0.113.11'}),env:{...env,LEAD_RATE_LIMIT_ENABLED:'true'}});
+  assert.equal(res.status,429);
+  assert.equal(res.headers.get('Retry-After'),'3600');
+  assert.equal(writes,0);
+ }finally{globalThis.fetch=previous;}
+});
+test('Gate 4 rate limiter fails closed when RPC is absent or client IP unavailable',async()=>{
+ const previous=globalThis.fetch;let writes=0;
+ try{
+  globalThis.fetch=async(url)=>{
+   if(String(url).includes('/siteverify'))return Response.json({success:true,hostname:'orbitalhr.pages.dev',action:'early_access'});
+   if(String(url).includes('/rpc/consume_lead_rate_limit'))return Response.json({code:'PGRST202'},{status:404});
+   if(String(url).includes('/rest/v1/early_access_leads')){writes++;throw Error('unexpected insert');}
+   throw Error('unexpected request');
+  };
+  for(const headers of [{'CF-Connecting-IP':'203.0.113.11'},{}]){
+   const res=await onRequest({request:req(payload,headers),env:{...env,LEAD_RATE_LIMIT_ENABLED:'true'}});
+   assert.equal(res.status,503);
+  }
+  assert.equal(writes,0);
+ }finally{globalThis.fetch=previous;}
+});
