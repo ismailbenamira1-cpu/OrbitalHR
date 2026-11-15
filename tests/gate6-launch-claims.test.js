@@ -26,7 +26,7 @@ test('Gate 6: homepage does not promise legal compliance, exact payroll day or u
 test('Gate 6: risk levels cannot be read as confirmed legal clearance',()=>{
  const data=evaluatePillars(sample);
  assert.equal(data.visa.level,'OK');
- assert.match(data.visa.action,/verify actual entry permission/i);
+ assert.match(data.visa.action,/verify actual permission and work rights/i);
  assert.match(data.pe.subRisks.pe.action,/review facts and applicable tax treaty/i);
  assert.match(data.ss.action,/verify|confirm|request/i);
  assert.doesNotMatch(data.visa.action,/^Within permitted stay\.$/);
