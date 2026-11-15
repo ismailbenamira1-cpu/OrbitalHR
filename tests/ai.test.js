@@ -105,7 +105,7 @@ test('a generic roster answer is replaced with each saved employee and all four 
   }finally{globalThis.fetch=previous;}
 });
 
-test('Gemini 3.8 Flash is default for both authenticated AI endpoints',async()=>{
+test('Verified Gemini Flash-Lite is selected for both authenticated AI endpoints',async()=>{
   const prev=globalThis.fetch;
   const geminiEnv={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'gemini-mock-key'};
   try {
@@ -124,12 +124,12 @@ test('Gemini 3.8 Flash is default for both authenticated AI endpoints',async()=>
       const output=await result.json();
       assert.equal(output.success,true);
       assert.equal(requested.filter(url=>url.includes('generativelanguage.googleapis.com')).length,1);
-      assert.match(requested.find(url=>url.includes('generativelanguage.googleapis.com')),/models\/gemini-3\.8-flash:generateContent/);
+      assert.match(requested.find(url=>url.includes('generativelanguage.googleapis.com')),/models\/gemini-3\.5-flash-lite:generateContent/);
       assert.ok(!requested.some(url=>url.includes('gemini-2.5')));
     }
   }finally{globalThis.fetch=prev;}
 });
-test('Gemini legacy override 404 falls back to supported Flash, not another retired model',async()=>{
+test('Old model environment override cannot select unavailable or slow model',async()=>{
   const prev=globalThis.fetch;
   const configured={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'gemini-mock-key',GEMINI_MODEL:'gemini-2.5-flash'};
   const attempted=[];
@@ -148,9 +148,8 @@ test('Gemini legacy override 404 falls back to supported Flash, not another reti
     const result=await copilot({request:req({query:'Who needs attention?'}),env:configured});
     assert.equal(result.status,200);
     assert.equal((await result.json()).success,true);
-    assert.equal(attempted.length,2);
-    assert.match(attempted[0],/gemini-2\.5-flash/);
-    assert.match(attempted[1],/gemini-3\.8-flash/);
+    assert.equal(attempted.length,1);
+    assert.match(attempted[0],/gemini-3\.5-flash-lite/);
   }finally{globalThis.fetch=prev;}
 });
 test('Gemini 401 fails fast instead of trying additional paid models',async()=>{
@@ -173,7 +172,7 @@ test('Gemini 401 fails fast instead of trying additional paid models',async()=>{
   }finally{globalThis.fetch=prev;}
 });
 
-test('Gemini 3.8 request uses supported low thinking config without deprecated temperature',async()=>{
+test('Production Flash-Lite request uses minimal thinking config without deprecated temperature',async()=>{
   const previous=globalThis.fetch;
   try{
     const upstream=[];
@@ -190,7 +189,7 @@ test('Gemini 3.8 request uses supported low thinking config without deprecated t
     const r=await copilot({request:req({query:'What requires review?'}),env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'}});
     assert.equal(r.status,200);
     assert.equal(upstream.length,1);
-    assert.equal(upstream[0].generationConfig.thinkingConfig.thinkingLevel,'low');
+    assert.equal(upstream[0].generationConfig.thinkingConfig.thinkingLevel,'minimal');
     assert.equal('temperature' in upstream[0].generationConfig,false);
   }finally{globalThis.fetch=previous;}
 });
