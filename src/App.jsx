@@ -336,13 +336,19 @@ function CopilotPanel({ roster }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q, roster: slimRoster, history }),
       });
-      const data = await res.json();
-      setMessages((m) => [
-        ...m,
-        { role: 'assistant', content: data.success ? data.answer : data.error || 'Something went wrong.' },
-      ]);
+      const raw = await res.text();
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch (e) {}
+      const answer = data
+        ? data.success
+          ? data.answer
+          : data.error || 'Something went wrong.'
+        : `Server replied ${res.status} (${res.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`;
+      setMessages((m) => [...m, { role: 'assistant', content: answer }]);
     } catch (err) {
-      setMessages((m) => [...m, { role: 'assistant', content: 'Network problem. Please try again.' }]);
+      setMessages((m) => [...m, { role: 'assistant', content: `Network problem: ${err.message}` }]);
     } finally {
       setBusy(false);
     }
@@ -623,13 +629,14 @@ const generateAiBrief = async (employee) => {
       body: JSON.stringify({ employee }),
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const text = await response.text();
-      throw new Error(`Server returned HTML/Text instead of JSON. Check your _redirects file! Response: ${text.substring(0, 100)}...`);
+    const raw = await response.text();
+    let data = null;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {}
+    if (!data) {
+      throw new Error(`Server replied ${response.status} (${response.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`);
     }
-
-    const data = await response.json();
 
     if (data.success && (data.summary || data.brief)) {
       setAiSummaries(prev => ({ ...prev, [employee.id]: data.summary || data.brief }));
