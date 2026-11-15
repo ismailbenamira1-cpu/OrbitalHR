@@ -241,7 +241,7 @@ function CopilotPanel({ session, onSignIn }) {
     try {
       const {data: refreshed,error: sessionError}=await supabase.auth.getSession();
       if(sessionError || !refreshed.session?.access_token)throw new Error('Sign in again.');
-      const response=await fetch('/api/ai-diagnostic',{
+      const response=await fetch(alt ? '/api/ai-diagnostic?model=gemini-3.5-flash-lite' : '/api/ai-diagnostic',{
         method:'GET',headers:{Authorization:`Bearer ${refreshed.session.access_token}`}
       });
       const result=await response.json();
@@ -254,7 +254,7 @@ function CopilotPanel({ session, onSignIn }) {
     }finally{setDiagnosing(false);}
   }
 
-  async function checkAiGeneration() {
+  async function checkAiGeneration(alt = false) {
     if (busy || diagnosing || testingGeneration) return;
     if(!session){onSignIn();return;}
     setTestingGeneration(true);
@@ -330,6 +330,9 @@ function CopilotPanel({ session, onSignIn }) {
         </button>
         <button type="button" onClick={checkAiGeneration} disabled={testingGeneration || diagnosing || busy} className="ml-3 text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50">
           {testingGeneration ? 'Testing minimal Gemini generation…' : 'Test Gemini generation (one small AI request)'}
+        </button>
+        <button type="button" onClick={() => checkAiGeneration(true)} disabled={testingGeneration || diagnosing || busy} className="ml-3 text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50">
+          {testingGeneration ? 'Testing Gemini…' : 'Test alternative: Gemini 3.5 Flash-Lite'}
         </button>
         <p className="mt-1 text-[10px] text-slate-500">Generation test uses a fixed one-word prompt, sends no employee data, and counts as one AI request.</p>
       </div>
