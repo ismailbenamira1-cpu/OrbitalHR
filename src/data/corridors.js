@@ -21,7 +21,7 @@ const HOST = {
     peBase: 'High', payroll: 130, entity: 2800,
   },
   Mexico: {
-    visa: { limit: 180, conf: 'verified', short: '180 days is the legal ceiling, not a safe planning limit: the immigration officer sets the days at entry (often fewer). Track the days printed on the FMM or digital FMM; no paid work in Mexico.', pathway: 'Visitor (FMM) or Temporary Resident visa (Residente Temporal) for longer stays', milestones: [] },
+    visa: { limit: 180, initialLimit: 180, extendedLimit: 180, extensionRequiredAt: null, extensionDiscretionary: true, entryAssigned: true, conf: 'verified', short: '180 days is the legal ceiling, not a safe planning limit: the immigration officer sets the days at entry (often fewer). Track the days printed on the FMM or digital FMM; no paid work in Mexico.', pathway: 'Visitor (FMM) or Temporary Resident visa (Residente Temporal) for longer stays', milestones: [] },
     tax: { T: 183, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Mexico has no domestic day-count test for individuals. Residence depends on a Mexican home and, if another home exists, the centre of vital interests (including Mexican-source income or main professional activities). Treat 183 days only as a treaty marker.', prompt: 'Flag from day one if the person owns or rents a Mexican home, relocates family, earns over 50% of income from Mexican sources, or has a Mexican professional base.', src: 'CFF art. 9 reproduced sources; secondary corroboration', milestones: [] },
     peBase: 'High', payroll: 110, entity: 3200,
   },
@@ -36,7 +36,7 @@ const HOST = {
     peBase: 'Moderate', payroll: 90, entity: 3500,
   },
   Thailand: {
-    visa: { limit: 60, conf: 'verified', short: 'US and Canadian citizens have 30 days visa-free from 15 Sep 2026 for tourism only, with 20,000 THB funds per person (40,000 per family). An extension of up to 30 days is solely at the immigration officer’s discretion.', pathway: 'Destination Thailand Visa (DTV, up to 180 days per entry) or Non-Immigrant B with work permit', milestones: [{ day: 30, lead: 7, label: 'Extend stay before day 30 or exit' }] },
+    visa: { limit: 60, initialLimit: 30, extendedLimit: 60, extensionRequiredAt: 30, extensionDiscretionary: true, conf: 'verified', short: 'US and Canadian citizens have 30 days visa-free from 15 Sep 2026 for tourism only, with 20,000 THB funds per person (40,000 per family). An extension of up to 30 days is solely at the immigration officer’s discretion.', pathway: 'Destination Thailand Visa (DTV, up to 180 days per entry) or Non-Immigrant B with work permit', milestones: [{ day: 30, lead: 7, label: 'Extend stay before day 30 or exit' }] },
     tax: { T: 180, alertT: 180, conf: 'secondary', peConf: 'secondary', short: '180+ days makes a person Thai tax resident. Foreign income earned on or after 1 Jan 2024 while resident is taxable when remitted in any year; income earned before 2024 or in a non-resident year is not taxed on remittance. Proposed remittance relief remains draft.', src: 'Revenue Department orders via law-firm trackers', milestones: [] },
     peBase: 'Moderate', payroll: 100, entity: 3600,
   },
@@ -71,6 +71,8 @@ const SS = {
 
 const ROLE_FACTOR = { 'Sales / Revenue': 0.33, Executive: 0.33, 'Manager / Team Lead': 0.67 };
 const SS_CERT = { 'Not filed': [15, 30, 60], Filed: [30, 60, 90] }; // policy: [watch, critical, breach] days
+// Policy schedule for corridors without a bilateral social-security agreement. These are Orbital operational alerts, not legal contribution thresholds.
+const SS_NO_AGREEMENT = [30, 60, 90]; // [watch, critical, breach] days
 
 // Policy boundaries: WATCH at ~67% of the limit, CRITICAL 5+ days (about 17%) before it. Example: 90-day limit -> watch 60, critical 75.
 export const bounds = (limit) => ({ limit, watchAt: Math.round(limit * 0.67), criticalAt: limit - Math.max(5, Math.round(limit * 0.17)) });
@@ -88,7 +90,17 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
   const h = HOST[host];
   const base = { pillar, home, host, title: PILLAR_TITLES[pillar], lastVerified: LAST_VERIFIED, milestones: [] };
   if (pillar === 'visa') {
-    return { ...base, ...bounds(h.visa.limit), rule: h.visa.short, detail: h.visa.pathway, conf: h.visa.conf, milestones: h.visa.milestones };
+    const initialLimit = h.visa.initialLimit ?? h.visa.limit;
+    const extendedLimit = h.visa.extendedLimit ?? h.visa.limit;
+    const extensionRequiredAt = h.visa.extensionRequiredAt ?? null;
+    const entryAssigned = h.visa.entryAssigned ?? false;
+    const limit = entryAssigned ? initialLimit : extendedLimit;
+    const milestones = [...(h.visa.milestones || [])];
+    if (extensionRequiredAt && !milestones.some((m) => m.day === extensionRequiredAt)) {
+      milestones.push({ day: extensionRequiredAt, lead: 7, label: h.visa.extensionDiscretionary ? 'Extension decision is discretionary: apply before this date or plan departure' : 'Extension required before this date' });
+    }
+    const detail = [h.visa.pathway, `Initial authorised stay: ${initialLimit} days.`, extendedLimit > initialLimit ? `Maximum possible stay: ${extendedLimit} days${h.visa.extensionDiscretionary ? ' only if the extension is granted' : ''}.` : null, entryAssigned ? 'Use the stay actually granted at entry; the legal ceiling is not a guaranteed entitlement.' : null].filter(Boolean).join(' ');
+    return { ...base, ...bounds(limit), rule: h.visa.short, detail, conf: h.visa.conf, milestones, initialLimit, extendedLimit, extensionRequiredAt, extensionDiscretionary: h.visa.extensionDiscretionary ?? false, entryAssigned };
   }
   if (pillar === 'pe') {
     const alertT = h.tax.alertT ?? h.tax.T;
@@ -107,7 +119,8 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     const [w, c, l] = SS_CERT[cert] || SS_CERT['Not filed'];
     return { ...base, limit: l, watchAt: w, criticalAt: c, rule: s.form, detail: `Certificate ${cert.toLowerCase()}. ${s.note}`, conf: s.conf, covered: true };
   }
-  return { ...base, ...bounds(h.tax.T), rule: s.form, detail: s.note, conf: s.conf, covered: false, milestones: [{ day: 30, lead: 0, label: 'No treaty relief: confirm whether host social security applies' }] };
+  const [w, c, l] = SS_NO_AGREEMENT;
+  return { ...base, limit: l, watchAt: w, criticalAt: c, rule: s.form, detail: `${s.note} Orbital policy alerts apply at ${w}/${c}/${l} days (WATCH/CRITICAL/BREACH); these are operational risk thresholds, not legal social-security contribution thresholds.`, conf: s.conf, covered: false, milestones: [{ day: w, lead: 0, label: 'No treaty relief: confirm whether host social security applies' }] };
 }
 
 const ACTIONS = {
@@ -132,7 +145,7 @@ export function evaluatePillars(emp) {
 
 export function hostSummary(host) {
   const h = HOST[host] || HOST[HOSTS[0]];
-  return { visaLimitDays: h.visa.limit, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
+  return { visaLimitDays: h.visa.limit, visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
 }
 
 export const worstLevel = (ps) => PILLARS.map((p) => ps[p].level).reduce((a, b) => (rank(b) > rank(a) ? b : a), 'OK');
