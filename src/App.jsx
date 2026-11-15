@@ -185,6 +185,7 @@ function CopilotPanel({ session, onSignIn }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -230,6 +231,26 @@ function CopilotPanel({ session, onSignIn }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function checkAiConnection() {
+    if (diagnosing || busy) return;
+    if(!session){onSignIn();return;}
+    setDiagnosing(true);
+    try {
+      const {data: refreshed,error: sessionError}=await supabase.auth.getSession();
+      if(sessionError || !refreshed.session?.access_token)throw new Error('Sign in again.');
+      const response=await fetch('/api/ai-diagnostic',{
+        method:'GET',headers:{Authorization:`Bearer ${refreshed.session.access_token}`}
+      });
+      const result=await response.json();
+      const details=result.success
+        ? `Gemini model metadata reachable: ${result.model}; HTTP ${result.httpStatus}; ${result.elapsedMs} ms. This does not prove AI generation will succeed.`
+        : `Gemini diagnostic: stage=${result.stage || 'unknown'}, category=${result.category || result.error || 'unknown'}, HTTP=${result.httpStatus ?? response.status}, elapsed=${result.elapsedMs ?? 'unknown'} ms. Please share only this status text, not your API key.`;
+      setMessages(m=>[...m,{role:'assistant',content:details}]);
+    }catch(err) {
+      setMessages(m=>[...m,{role:'assistant',content:'AI connectivity test failed: '+err.message}]);
+    }finally{setDiagnosing(false);}
   }
 
   const starters = ['Who is closest to a visa limit?', 'Who has the highest PE risk?', 'Who needs individual tax review?', 'Who is eligible for payroll feasibility review?'];
@@ -281,6 +302,11 @@ function CopilotPanel({ session, onSignIn }) {
           </div>
         )}
         <div ref={endRef} />
+      </div>
+      <div className="border-t border-slate-100 bg-slate-50 px-3 py-2">
+        <button type="button" onClick={checkAiConnection} disabled={diagnosing || busy} className="text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50">
+          {diagnosing ? 'Checking Gemini connection…' : 'Test Gemini connection (no AI generation)'}
+        </button>
       </div>
       <div className="border-t border-slate-200 p-2">
         <div className="flex gap-2">
