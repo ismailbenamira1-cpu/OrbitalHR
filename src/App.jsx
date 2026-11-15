@@ -118,7 +118,7 @@ function PillarMeter({ p }) {
       </div>
       <p className="mt-1.5 font-medium text-slate-800">{p.action}</p>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-slate-400">
-        Internal source category: {p.conf} · Review status: {p.lastVerified} · No legal clearance
+        Source/legal review pending · Model date reference: {p.lastVerified} · No legal clearance
       </p>
     </div>
   );
@@ -130,7 +130,7 @@ function MatrixPanel() {
   return (
     <details className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <summary className="cursor-pointer text-sm font-bold text-slate-900">
-        Compliance rules matrix: 2 home countries × 7 hosts × 3 pillars (42 cells)
+        Screening assumptions matrix: 2 home countries × 7 host options × 3 pillars (42 cells)
       </summary>
       <div className="mt-3 flex gap-2">
         {HOMES.map((h) => (
@@ -163,7 +163,7 @@ function MatrixPanel() {
                     <td key={p} className="px-3 py-2">
                       <div className="text-slate-700">{c.rule}</div>
                       <div className="mt-1 font-semibold text-indigo-700">
-                        {c.reviewRequired ? (p === 'visa' ? (c.host === 'Schengen Area' ? 'Rolling travel history required' : 'Actual entry grant required') : 'No regional legal limit — review required') : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
+                        {c.reviewRequired ? (p === 'visa' ? (c.host === 'Schengen Area' ? 'Rolling travel history required' : 'Actual entry grant required') : 'No regional legal limit — review required') : `Internal screening: Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
                       </div>
                       <div className="text-[10px] uppercase text-slate-400"><ConfidenceBadge conf={c.conf} /></div>
                     </td>
