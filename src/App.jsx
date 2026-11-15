@@ -727,6 +727,9 @@ const generateAiBrief = async (employee) => {
             <p className="text-base text-slate-300 max-w-2xl">
               Review employee mobility exposure across 7 modeled destinations, with immigration, tax, social-security and payroll alerts that require country-specific professional verification.
             </p>
+            <p className="rounded-lg border border-amber-300/40 bg-amber-100/10 px-3 py-2 text-sm text-amber-100" role="note">
+              Screening only — not legal advice, immigration/work authorization, a tax determination, or confirmation of social-security compliance. Country-specific facts and qualified adviser review are required before decisions.
+            </p>
           </div>
 
           <form
