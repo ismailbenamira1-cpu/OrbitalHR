@@ -102,7 +102,7 @@ function LevelBadge({ level }) {
 }
 
 function ConfidenceBadge({ conf }) {
-  const label = { verified: 'Prior source review · legal sign-off pending', secondary: 'Secondary source · legal sign-off pending', verify: 'Source/legal review required' };
+  const label = { verified: 'Source reference identified · legal review pending', secondary: 'Secondary reference · legal review pending', verify: 'Source/legal review required' };
   return <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">{label[conf] || label.verify}</span>;
 }
 
@@ -118,7 +118,7 @@ function PillarMeter({ p }) {
       </div>
       <p className="mt-1.5 font-medium text-slate-800">{p.action}</p>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-slate-400">
-        Model source status: {p.conf} · Last ruleset review: {p.lastVerified} · Not a legal determination
+        Internal source category: {p.conf} · Review status: {p.lastVerified} · No legal clearance
       </p>
     </div>
   );
@@ -822,7 +822,7 @@ const generateAiBrief = async (employee) => {
                 Illustrative cost scenario
               </span>
               <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-                EOR vs. Local Payroll — Non-binding Estimate
+                EOR vs. Local Payroll — Simplified, Non-binding Example
               </h2>
               <p className="text-xs text-slate-300 max-w-xl">
                 Example only: 5 hires at ${eorFee}/month EOR fees represent <strong className="text-white">${(eorFee * 5 * 12).toLocaleString()}/year</strong>. An illustrative software-plus-payroll scenario at ${orbitalFee + 110}/month per hire would be <strong className="text-white">${((orbitalFee + 110) * 5 * 12).toLocaleString()}/year</strong>, excluding entity setup, tax, permits, advisers and local costs. Changing payroll requires separate legal review.
@@ -882,7 +882,7 @@ const generateAiBrief = async (employee) => {
 
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
             <div className="flex items-center justify-between text-emerald-800">
-              <span className="text-xs font-medium uppercase">Potential EOR Savings</span>
+              <span className="text-xs font-medium uppercase">Illustrative EOR Cost Difference</span>
               <DollarSign className="h-4 w-4 text-emerald-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-emerald-950">
@@ -1074,7 +1074,7 @@ const generateAiBrief = async (employee) => {
                 <th className="px-4 py-3">Pillar 6: Visa & Stay</th>
                 <th className="px-4 py-3">Pillar 2: PE / Tax Residency</th>
                 <th className="px-4 py-3">Pillar 1: Social Security</th>
-                <th className="px-4 py-3">Compliance / Payroll Review</th>
+                <th className="px-4 py-3">Screening Alerts / Payroll Review</th>
                 <th className="px-4 py-3 text-right">Manage</th>
               </tr>
             </thead>
