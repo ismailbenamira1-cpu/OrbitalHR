@@ -11,7 +11,7 @@ async function probe(path, init = {}) {
     const contentType = response.headers.get('content-type') || '';
     const body = (await response.text()).slice(0, 1200000);
     rows.push({ path, status: response.status, contentType, redirected: response.redirected, url: response.url });
-    return { response, body, contentType };
+    return { response, body, contentType }; 
   } catch (e) {
     rows.push({ path, error: e.message });
     return { error: e.message };
