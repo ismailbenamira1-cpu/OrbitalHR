@@ -170,3 +170,55 @@ test('Gemini 401 fails fast instead of trying additional paid models',async()=>{
     assert.equal(attempted.length,1);
   }finally{globalThis.fetch=prev;}
 });
+
+test('Gemini 3.8 request uses supported low thinking config without deprecated temperature',async()=>{
+  const previous=globalThis.fetch;
+  try{
+    const upstream=[];
+    globalThis.fetch=async(url,options={})=>{
+      if(url.endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+      if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+      if(url.includes('employee_rosters'))return Response.json([row]);
+      if(url.includes('generativelanguage.googleapis.com')){
+        upstream.push(JSON.parse(options.body));
+        return Response.json({candidates:[{content:{parts:[{text:'Good response.'}]}}]});
+      }
+      throw Error('Unexpected '+url);
+    };
+    const r=await copilot({request:req({query:'What requires review?'}),env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'}});
+    assert.equal(r.status,200);
+    assert.equal(upstream.length,1);
+    assert.equal(upstream[0].generationConfig.thinkingConfig.thinkingLevel,'LOW');
+    assert.equal('temperature' in upstream[0].generationConfig,false);
+  }finally{globalThis.fetch=previous;}
+});
+test('Gemini network outage provides a transparently labeled source-based overview and employee brief',async()=>{
+ const previous=globalThis.fetch;
+ try{
+   globalThis.fetch=async(url,options={})=>{
+     if(url.endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+     if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+     if(url.includes('employee_rosters'))return Response.json([row]);
+     if(url.includes('generativelanguage.googleapis.com'))throw new TypeError('fetch failed');
+     throw Error('Unexpected '+url);
+   };
+   const e={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'};
+   const r=await copilot({request:req({query:'Which employees in my saved roster require compliance review?'}),env:e});
+   assert.equal(r.status,200);
+   const report=await r.json();
+   assert.equal(report.mode,'offline-screening');
+   assert.equal(report.providerAvailable,false);
+   assert.match(report.notice,/not by the AI provider/);
+   assert.match(report.answer,/Social security:/);
+   const b=await brief({request:req({employeeId:ID}),env:e});
+   assert.equal(b.status,200);
+   const bp=await b.json();
+   assert.equal(bp.mode,'offline-screening');
+   assert.equal(bp.providerAvailable,false);
+   assert.match(bp.brief,/SOCIAL SECURITY/);
+   assert.match(bp.brief,/PAYROLL & EOR FEASIBILITY/);
+   const narrow=await copilot({request:req({query:'hello'}),env:e});
+   assert.equal(narrow.status,503);
+   assert.match((await narrow.json()).error,/could not be reached/);
+ }finally{globalThis.fetch=previous;}
+});
