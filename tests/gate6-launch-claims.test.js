@@ -42,6 +42,8 @@ test('Gate 6: source-review labels are not presented as professional sign-off',(
 });
 
 test('Gate 6: visible user notices preserve limits and AI data handling disclosure',()=>{
+ assert.match(app,/Pre-launch evaluation: use fictional employee records only/);
+ assert.match(app,/Screening only — not legal advice/);
  assert.match(app,/Screening-only MVP:/);
  assert.match(app,/not findings of legal breach/);
  assert.match(app,/free text and travel details may still identify people/i);
