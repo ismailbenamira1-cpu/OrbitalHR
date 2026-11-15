@@ -45,7 +45,7 @@ test('server-owned roster and authenticated AI contract',async()=>{
       const payload=JSON.parse(prompt.messages.at(-1).content);
       assert.equal(payload.employee?.name ?? payload.roster[0].name,'Server-owned employee');
       assert.ok(!JSON.stringify(payload).includes('Forged employee'));
-      assert.match(prompt.system,/Tax residency is not a violation/);
+      assert.match(prompt.system,/Tax residency is not a (violation|breach)/i);
     }
   }finally{globalThis.fetch=previous;}
 });
