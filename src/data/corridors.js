@@ -18,8 +18,8 @@ export const SCHENGEN_REVIEW = {
 const HOST = {
   'Schengen Area': {
     visa: { limit: 90, conf: 'verified', short: '90 days in any rolling 180 (EES biometric tracking; ETIAS expected late 2026, confirm start date)', pathway: 'Visa-free short stay, or a national remote-work / digital nomad visa where offered', milestones: [] },
-    tax: { T: 183, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Germany, France and Spain are suggested first states to model: none is a pure 183-day test. Germany can trigger on an available dwelling or habitual abode; France on home/principal stay, principal professional activity or economic interests; Spain on 183+ days, economic interests, or family ties.', prompt: 'Ask about an available home, family location and centre of income/economic interests; model country-specific triggers rather than relying on 183 days alone.', src: 'Secondary review; statutes not directly read' },
-    peBase: 'High', payroll: 145, entity: 4500,
+    tax: { T: null, alertT: null, conf: 'verify', peConf: 'verify', short: 'Germany, France and Spain are suggested first states to model: none is a pure 183-day test. Germany can trigger on an available dwelling or habitual abode; France on home/principal stay, principal professional activity or economic interests; Spain on 183+ days, economic interests, or family ties.', prompt: 'Ask about an available home, family location and centre of income/economic interests; model country-specific triggers rather than relying on 183 days alone.', src: 'Secondary review; statutes not directly read' },
+    peBase: null, payroll: null, entity: null,
   },
   'United Kingdom': {
     visa: { limit: 180, conf: 'verified', short: 'Up to 6 months per visit; ETA required; work for a foreign employer must stay incidental', pathway: 'Standard Visitor (incidental remote work) or Global Business Mobility routes', milestones: [] },
@@ -28,7 +28,7 @@ const HOST = {
   },
   Mexico: {
     visa: { limit: 180, initialLimit: 180, extendedLimit: 180, extensionRequiredAt: null, extensionDiscretionary: true, entryAssigned: true, conf: 'verified', short: '180 days is the legal ceiling, not a safe planning limit: the immigration officer sets the days at entry (often fewer). Track the days printed on the FMM or digital FMM; no paid work in Mexico.', pathway: 'Visitor (FMM) or Temporary Resident visa (Residente Temporal) for longer stays', milestones: [] },
-    tax: { T: 183, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Mexico has no domestic day-count test for individuals. Residence depends on a Mexican home and, if another home exists, the centre of vital interests (including Mexican-source income or main professional activities). Treat 183 days only as a treaty marker.', prompt: 'Flag from day one if the person owns or rents a Mexican home, relocates family, earns over 50% of income from Mexican sources, or has a Mexican professional base.', src: 'CFF art. 9 reproduced sources; secondary corroboration', milestones: [] },
+    tax: { T: null, alertT: 183, conf: 'secondary', peConf: 'secondary', short: 'Mexico has no domestic day-count test for individuals. Residence depends on a Mexican home and, if another home exists, the centre of vital interests (including Mexican-source income or main professional activities). Treat 183 days only as a treaty marker.', prompt: 'Flag from day one if the person owns or rents a Mexican home, relocates family, earns over 50% of income from Mexican sources, or has a Mexican professional base.', src: 'CFF art. 9 reproduced sources; secondary corroboration', milestones: [] },
     peBase: 'High', payroll: 110, entity: 3200,
   },
   India: {
@@ -38,7 +38,7 @@ const HOST = {
   },
   Philippines: {
     visa: { limit: 59, initialLimit: 30, extendedLimit: 59, extensionRequiredAt: 30, extensionDiscretionary: true, conf: 'secondary', short: '30 days visa-free on arrival, extendable at the Bureau of Immigration to 59 days; extension must be filed before day 30', pathway: '9A tourist extension or 9G pre-arranged employment visa', milestones: [{ day: 30, lead: 7, label: 'File Bureau of Immigration extension before day 30' }] },
-    tax: { T: 180, alertT: 90, conf: 'secondary', peConf: 'secondary', short: 'Compensation for services performed in the Philippines is Philippine-source and can be taxable from day one. 180 days changes the domestic tax treatment; treaty relief is narrower and the US threshold needs professional confirmation (90 vs 183 days reported by sources).', src: 'NIRC/BIR guidance via professional summaries; treaty threshold secondary', milestones: [] },
+    tax: { T: null, alertT: 90, conf: 'secondary', peConf: 'secondary', short: 'Compensation for services performed in the Philippines is Philippine-source and can be taxable from day one. 180 days changes the domestic tax treatment; treaty relief is narrower and the US threshold needs professional confirmation (90 vs 183 days reported by sources).', src: 'NIRC/BIR guidance via professional summaries; treaty threshold secondary', milestones: [] },
     peBase: 'Moderate', payroll: 90, entity: 3500,
   },
   Thailand: {
@@ -48,7 +48,7 @@ const HOST = {
   },
   Indonesia: {
     visa: { limit: 60, initialLimit: 30, extendedLimit: 60, extensionRequiredAt: 30, extensionDiscretionary: true, conf: 'secondary', short: 'Visa on arrival: 30 days, extendable once by 30 days (60 total); tourist status does not allow work', pathway: 'E33G remote worker KITAS or PT PMA with work KITAS', milestones: [{ day: 30, lead: 7, label: 'Extend visa on arrival before day 30' }] },
-    tax: { T: 183, alertT: 120, conf: 'verified', peConf: 'secondary', short: 'Resident if present more than 183 days in any 12 months, or present during the tax year with intent to reside; intent can be evidenced by a qualifying permit, visa, contract, lease or family relocation. Treaty service-PE and employment tests use 120 days in the reviewed US/Canada materials.', src: 'DGT residency guidance; treaty threshold secondary', milestones: [] },
+    tax: { T: 184, alertT: 120, conf: 'verified', peConf: 'secondary', short: 'Resident if present more than 183 days in any 12 months, or present during the tax year with intent to reside; intent can be evidenced by a qualifying permit, visa, contract, lease or family relocation. Treaty service-PE and employment tests use 120 days in the reviewed US/Canada materials.', src: 'DGT residency guidance; treaty threshold secondary', milestones: [] },
     peBase: 'High', payroll: 95, entity: 4200,
   },
 };
@@ -99,11 +99,11 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
   const base = { pillar, home, host, title: PILLAR_TITLES[pillar], lastVerified: LAST_VERIFIED, milestones: [] };
   if (host === 'Schengen Area' && pillar !== 'visa') {
     const detail = SCHENGEN_NOTICE + ' No regional legal threshold or certificate coverage can be established. Country-specific review is required from day one.';
-    const review = { ...bounds(90), rule: 'Country-specific review required', detail, conf: 'verify', milestones: [], reviewRequired: true, lastVerified: LAST_VERIFIED };
-    // Numeric values are internal compatibility placeholders only; never use them to classify regional exposure.
+    const review = { limit: null, watchAt: null, criticalAt: null, rule: 'Country-specific review required', detail, conf: 'verify', milestones: [], reviewRequired: true, lastVerified: LAST_VERIFIED };
     if (pillar === 'pe') return { ...base, ...review, pePolicy: { ...review }, taxResidency: { ...review } };
     return { ...base, ...review, covered: null };
   }
+  if (pillar === 'visa' && host === 'Schengen Area') return { ...base, limit: null, watchAt: null, criticalAt: null, rule: h.visa.short, detail: '90 days in any rolling 180 is a short-stay rule, not work permission. Aggregate days abroad cannot establish the remaining allowance. Review dated travel history and national work permission.', conf: 'verify', reviewRequired: true, rollingWindowDays: 180, shortStayAllowanceDays: 90 };
   if (pillar === 'visa') {
     const initialLimit = h.visa.initialLimit ?? h.visa.limit;
     const extendedLimit = h.visa.extendedLimit ?? h.visa.limit;
@@ -128,14 +128,14 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     const roleFactor = ROLE_FACTOR[role] ?? 1;
     const highRiskFactor = h.peBase === 'High' ? PE_HIGH_RISK_FACTOR : 1;
     const limit = Math.min(alertT, Math.max(15, Math.round(alertT * highRiskFactor * roleFactor)));
-    const detailParts = [`Orbital PE policy threshold: ${limit} days. Legal/treaty PE alert reference: ${alertT} days; tax-residency reference: ${legalReferenceDays} days. Base PE risk: ${h.peBase}. Role "${role}" applies a ${Math.round((1 - roleFactor) * 100)}% policy reduction${h.peBase === 'High' ? '; elevated host risk applies an additional 10% policy reduction' : ''}.`];
+    const detailParts = [`Orbital PE policy threshold: ${limit} days. Internal PE screening base: ${alertT} days (not a verified legal threshold). Base PE risk: ${h.peBase}. Role "${role}" applies a ${Math.round((1 - roleFactor) * 100)}% policy reduction${h.peBase === 'High' ? '; elevated host risk applies an additional 10% policy reduction' : ''}.`];
     if (h.tax.prompt) detailParts.push(`Review prompt: ${h.tax.prompt}`);
     if (h.tax.src) detailParts.push(`Sources: ${h.tax.src}`);
     detailParts.push(HOME_TAX[home]);
     // Tax-residency milestones belong to the residency track, not the PE policy limit.
-    const taxResidency = { ...bounds(legalReferenceDays), rule: h.tax.short, detail: `Tax-residency track: ${h.tax.short}`, conf: h.tax.conf, milestones: h.tax.milestones || [] };
+    const taxResidency = { ...(legalReferenceDays === null ? { limit: null, watchAt: null, criticalAt: null } : bounds(legalReferenceDays)), referenceDays: legalReferenceDays, screeningOnly: true, rule: h.tax.short, detail: `Tax-residency screening: ${h.tax.short} Aggregate days are not a legal residency determination; verify the relevant tax period, history and other criteria.`, conf: h.tax.conf, milestones: h.tax.milestones || [] };
     const pePolicy = { ...bounds(limit), rule: `PE policy threshold: ${limit} days`, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
-    return { ...base, ...pePolicy, taxResidency, pePolicy, rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
+    return { ...base, ...pePolicy, taxResidency, pePolicy, rule: pePolicy.rule, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
   }
   const s = SS[home][host];
   if (s.covered) {
@@ -156,7 +156,7 @@ const SS_NO_AGREEMENT_ACTIONS = {
 };
 const ACTIONS = {
   visa: { OK: 'Within permitted stay.', WATCH: 'Plan an extension or a visa pathway now.', CRITICAL: 'Alert HR: apply for an extension or arrange departure or a work visa.', BREACH: 'Overstay risk: leave or regularise status immediately.' },
-  pe: { OK: 'No action needed.', WATCH: 'Review role, contract signing and home-office use in the host country.', CRITICAL: 'Alert HR and tax: limit contracting authority and prepare local payroll or an entity.', BREACH: 'Likely PE or tax residency exposure: engage a tax adviser now.' },
+  pe: { OK: 'No action needed.', WATCH: 'Review role, contract signing and home-office use in the host country.', CRITICAL: 'Escalate employer PE review to HR and corporate tax counsel; assess contracting authority and business presence.', BREACH: 'Internal PE escalation threshold reached; assess employer PE with corporate tax counsel.' },
   ss: { OK: 'Coverage position is in order.', WATCH: 'Request the certificate of coverage now (or confirm host contribution rules).', CRITICAL: 'Alert HR: certificate overdue or host contributions likely; act this week.', BREACH: 'Dual contribution exposure: file the certificate or move to local payroll.' },
 };
 
@@ -173,7 +173,7 @@ export function evaluatePillars(emp) {
       out[p] = { ...c, level, days, action: SS_NO_AGREEMENT_ACTIONS[level] };
       return;
     }
-    if (p === 'visa' && c.reviewRequired) { out[p] = { ...c, level: 'WATCH', days, action: 'Record the actual authorised stay granted at entry before relying on a countdown.' }; return; }
+    if (p === 'visa' && c.reviewRequired) { out[p] = { ...c, level: 'WATCH', days, action: host === 'Schengen Area' ? 'Review dated travel history for the rolling 90/180 allowance and national work permission.' : 'Record the actual authorised stay granted at entry before relying on a countdown.' }; return; }
     if (c.reviewRequired) {
       const review = { ...c, level: 'WATCH', days, action: SCHENGEN_NOTICE };
       out[p] = p === 'pe' ? { ...review, subRisks: { pe: { ...c.pePolicy, level: 'WATCH', days, action: SCHENGEN_NOTICE }, taxResidency: { ...c.taxResidency, level: 'WATCH', days, action: SCHENGEN_NOTICE } } } : review;
@@ -181,7 +181,9 @@ export function evaluatePillars(emp) {
     }
     if (p === 'pe' && c.pePolicy && c.taxResidency) {
       const peLevel = levelFor(days, c.pePolicy, c.pePolicy.milestones);
-      const taxLevel = levelFor(days, c.taxResidency, c.taxResidency.milestones);
+      const rawTaxLevel = c.taxResidency.limit === null ? (days > 0 ? 'WATCH' : 'OK') : levelFor(days, c.taxResidency, c.taxResidency.milestones);
+      // Residency is not a violation. A reference reached is an urgent review, never BREACH.
+      const taxLevel = rawTaxLevel === 'BREACH' ? 'CRITICAL' : rawTaxLevel;
       const level = rank(taxLevel) > rank(peLevel) ? taxLevel : peLevel;
       const taxMs = c.taxResidency.milestones.find((m) => days >= m.day - (m.lead ?? 7) && days < c.taxResidency.limit);
       const actionBase = level === taxLevel && taxLevel !== 'OK'
@@ -209,7 +211,7 @@ export function evaluatePillars(emp) {
 
 export function hostSummary(host) {
   const h = HOST[host] || HOST[HOSTS[0]];
-  return { regionalPlaceholder: host === 'Schengen Area', jurisdictionNotice: host === 'Schengen Area' ? SCHENGEN_NOTICE : null, countryReview: host === 'Schengen Area' ? SCHENGEN_REVIEW : null, visaLimitDays: h.visa.limit, taxResidencyMilestones: h.tax.milestones || [], visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
+  return { regionalPlaceholder: host === 'Schengen Area', jurisdictionNotice: host === 'Schengen Area' ? SCHENGEN_NOTICE : null, countryReview: host === 'Schengen Area' ? SCHENGEN_REVIEW : null, visaLimitDays: host === 'Schengen Area' ? null : h.visa.limit, taxResidencyMilestones: h.tax.milestones || [], visaInitialLimitDays: host === 'Schengen Area' ? null : h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: host === 'Schengen Area' ? null : h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
 }
 
 export const worstLevel = (ps) => PILLARS.map((p) => ps[p].level).reduce((a, b) => (rank(b) > rank(a) ? b : a), 'OK');
