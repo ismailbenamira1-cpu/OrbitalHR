@@ -51,6 +51,12 @@ if (!home.response) {
     note(path+' anonymous POST rejects',status===401||status===503,'status '+(status??post.error));
     if(post.contentType)note(path+' returns JSON not static fallback',post.contentType.includes('application/json'),post.contentType);
     if(status===503)console.log('CONFIG: Endpoint fail-closed with 503; check Cloudflare Functions SUPABASE_URL and SUPABASE_ANON_KEY bindings');
+    // Gate 3: Check authentication failures without supplying a real user or incurring AI usage.
+    const validBody=path.includes('compliance')?data:JSON.stringify({employeeId:'123e4567-e89b-12d3-a456-426614174000'});
+    const badToken=await probe(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer invalid-gate3-token'},body:validBody});
+    note(path+' rejects forged bearer',badToken.response?.status===401,'status '+(badToken.response?.status??badToken.error));
+    const crossSite=await probe(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer invalid-gate3-token',Origin:'https://untrusted.invalid'},body:validBody});
+    note(path+' rejects cross-origin POST',crossSite.response?.status===403,'status '+(crossSite.response?.status??crossSite.error));
   }
   console.log(JSON.stringify({verdict,checks:rows},null,2));
   if(verdict!=='PASS')process.exitCode=1;
