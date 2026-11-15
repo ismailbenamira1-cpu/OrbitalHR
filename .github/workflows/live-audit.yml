@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '17 7 * * *' # Daily UTC, read-only probes only; GitHub scheduled runs are best effort
 permissions:
   contents: read
 jobs:
