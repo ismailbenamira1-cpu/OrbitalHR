@@ -102,3 +102,71 @@ test('a generic roster answer is replaced with each saved employee and all four 
     assert.doesNotMatch(data.answer,/forged employee/i);
   }finally{globalThis.fetch=previous;}
 });
+
+test('Gemini 3.8 Flash is default for both authenticated AI endpoints',async()=>{
+  const prev=globalThis.fetch;
+  const geminiEnv={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'gemini-mock-key'};
+  try {
+    for(const [handler,body] of [[copilot,{query:'What do I review next?'}],[brief,{employeeId:ID}]]){
+      const requested=[];
+      globalThis.fetch=async(url,options={})=>{
+        requested.push(url);
+        if(url.endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+        if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+        if(url.includes('employee_rosters'))return Response.json([row]);
+        if(url.includes('generativelanguage.googleapis.com'))return Response.json({candidates:[{content:{parts:[{text:'Relevant evidence-based answer with next steps.'}]}}]});
+        throw Error('Unexpected '+url);
+      };
+      const result=await handler({request:req(body),env:geminiEnv});
+      assert.equal(result.status,200);
+      const output=await result.json();
+      assert.equal(output.success,true);
+      assert.equal(requested.filter(url=>url.includes('generativelanguage.googleapis.com')).length,1);
+      assert.match(requested.find(url=>url.includes('generativelanguage.googleapis.com')),/models\/gemini-3\.8-flash:generateContent/);
+      assert.ok(!requested.some(url=>url.includes('gemini-2.5')));
+    }
+  }finally{globalThis.fetch=prev;}
+});
+test('Gemini legacy override 404 falls back to supported Flash, not another retired model',async()=>{
+  const prev=globalThis.fetch;
+  const configured={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'gemini-mock-key',GEMINI_MODEL:'gemini-2.5-flash'};
+  const attempted=[];
+  try {
+    globalThis.fetch=async(url,options={})=>{
+      if(url.endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+      if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+      if(url.includes('employee_rosters'))return Response.json([row]);
+      if(url.includes('generativelanguage.googleapis.com')){
+        attempted.push(url);
+        if(url.includes('gemini-2.5-flash'))return Response.json({error:{message:'No longer available to new users'}},{status:404});
+        return Response.json({candidates:[{content:{parts:[{text:'Success with current Gemini.'}]}}]});
+      }
+      throw Error('Unexpected '+url);
+    };
+    const result=await copilot({request:req({query:'Who needs attention?'}),env:configured});
+    assert.equal(result.status,200);
+    assert.equal((await result.json()).success,true);
+    assert.equal(attempted.length,2);
+    assert.match(attempted[0],/gemini-2\.5-flash/);
+    assert.match(attempted[1],/gemini-3\.8-flash/);
+  }finally{globalThis.fetch=prev;}
+});
+test('Gemini 401 fails fast instead of trying additional paid models',async()=>{
+  const prev=globalThis.fetch;
+  const attempted=[];
+  try {
+    globalThis.fetch=async(url,options={})=>{
+      if(url.endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+      if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+      if(url.includes('employee_rosters'))return Response.json([row]);
+      if(url.includes('generativelanguage.googleapis.com')){
+        attempted.push(url);
+        return Response.json({error:{message:'Invalid API key'}},{status:401});
+      }
+      throw Error('Unexpected '+url);
+    };
+    const r=await copilot({request:req({query:'Who needs attention?'}),env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'invalid'}});
+    assert.equal(r.status,503);
+    assert.equal(attempted.length,1);
+  }finally{globalThis.fetch=prev;}
+});
