@@ -356,7 +356,7 @@ function CopilotPanel({ session, onSignIn }) {
             <Send className="h-4 w-4" />
           </button>
         </div>
-        <p className="mt-1 px-1 text-[10px] text-slate-400">Your saved employee data is sent to the configured AI provider to answer your request. Avoid submitting unnecessary personal information. AI output is not legal advice.</p>
+        <p className="mt-1 px-1 text-[10px] text-slate-400">Relevant roster screening fields and your question/history may be sent to an external AI provider. Stored names are replaced with aliases in structured prompts, but free text and travel details may still identify people. Do not enter unnecessary personal information. AI output is not legal advice.</p>
       </div>
     </div>
   );
@@ -722,11 +722,10 @@ const generateAiBrief = async (employee) => {
               Built for 50–500 Employee US & Canadian Companies
             </p>
             <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-              Stop paying $599/month per remote hire to an EOR.
+              Screen cross-border mobility risks before making HR decisions.
             </h1>
             <p className="text-base text-slate-300 max-w-2xl">
-              Keep traveling and remote employees compliant on your home payroll across 7 global destinations—and know
-              the exact day to graduate long-term hires onto local payroll for ${orbitalFee}/employee/month.
+              Review employee mobility exposure across 7 modeled destinations, with immigration, tax, social-security and payroll alerts that require country-specific professional verification.
             </p>
           </div>
 
@@ -736,7 +735,7 @@ const generateAiBrief = async (employee) => {
           >
             <div className="flex items-center gap-2 text-sm font-semibold text-white">
               <Building2 className="h-4 w-4 text-indigo-300" />
-              Request Early Access & Custom Country Audit
+              Request Early Access & Country Screening
             </div>
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <input
@@ -795,11 +794,11 @@ const generateAiBrief = async (employee) => {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-around gap-6 px-6 text-xs font-medium text-slate-600">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            <span>Verified 2026 Global Tax & Visa Rules (7 Corridors)</span>
+            <span>7 Modeled Destinations · Rules Require Verification</span>
           </div>
           <div className="flex items-center gap-2">
             <FileCheck2 className="h-4 w-4 text-indigo-600" />
-            <span>US Totalization & CRA CPT Form Automation</span>
+            <span>Social-Security Agreement & Certificate Screening</span>
           </div>
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-amber-600" />
@@ -807,7 +806,7 @@ const generateAiBrief = async (employee) => {
           </div>
           <div className="flex items-center gap-2">
             <Database className="h-4 w-4 text-slate-700" />
-            <span>Secure Supabase RLS Data Isolation</span>
+            <span>Signed-in User Roster Isolation</span>
           </div>
         </div>
       </div>
@@ -831,7 +830,7 @@ const generateAiBrief = async (employee) => {
             </div>
             <div className="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-md border border-white/15">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Illustrative Annual Savings</p>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Illustrative Savings Scenario</p>
                 <p className="text-2xl font-black text-emerald-400">${kpis.totalAnnualSavings.toLocaleString()}</p>
               </div>
               <div className="h-8 w-px bg-white/20"></div>
@@ -1152,7 +1151,7 @@ const generateAiBrief = async (employee) => {
 
             <div className="space-y-2 border-b border-slate-100 pb-4 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-rose-600">
-                <ShieldAlert className="h-4 w-4" /> Pillar 2: PE Tax Escrow & Overstay Shield
+                <ShieldAlert className="h-4 w-4" /> Pillar 2: Employer PE & Individual Tax Screening
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.taxRuleShort}</p>
               {selectedEmployee.rule.regionalPlaceholder && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><strong>{selectedEmployee.rule.jurisdictionNotice}</strong>{Object.entries(selectedEmployee.rule.countryReview).map(([country, note]) => <p key={country} className="mt-1"><strong>{country}:</strong> {note}</p>)}</div>}
@@ -1192,7 +1191,7 @@ const generateAiBrief = async (employee) => {
 
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold uppercase text-emerald-700">
-                <FileCheck2 className="h-4 w-4" /> Pillar 1: Social Security & A1 Certificate
+                <FileCheck2 className="h-4 w-4" /> Pillar 1: Social-Security & Certificate Screening
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.ssInfo.form}</p>
               <p className="text-xs text-slate-600">{selectedEmployee.ssInfo.note}</p>
@@ -1208,13 +1207,13 @@ const generateAiBrief = async (employee) => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700">
-                <Clock className="h-3.5 w-3.5" /> Roadmap 2026–2027 (7-Pillar Stack)
+                <Clock className="h-3.5 w-3.5" /> Illustrative Future Product Roadmap
               </span>
               <h2 className="text-lg font-bold text-slate-900 mt-1">
                 Upcoming Enterprise Compliance Pillars
               </h2>
               <p className="text-xs text-slate-500">
-                Advanced cross-border modules currently in closed beta for enterprise accounts (500+ employees).
+                Future concepts only; these modules are not part of the current MVP and have no committed release date.
               </p>
             </div>
           </div>
@@ -1223,44 +1222,44 @@ const generateAiBrief = async (employee) => {
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 3</span>
-                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Not released</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Dual Income Tax Withholding & Shadow Payroll</h3>
               <p className="text-xs text-slate-600">
-                Calculates cross-border tax liabilities and outputs clean data payloads for ADP & Workday integration.
+                Potential future tools for payroll reporting; no tax calculation or ADP/Workday integration is available today.
               </p>
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 4</span>
-                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q3</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Not released</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Posted Worker Notifications (PWN)</h3>
               <p className="text-xs text-slate-600">
-                Generates pre-filled labor declaration drafts for European Ministries of Labour (e.g. France SIPSI) to block fines.
+                Potential future assistance with country-specific posted-worker requirements; availability and legal review are pending.
               </p>
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 5</span>
-                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Not released</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">Local Labor & Wage Rules</h3>
               <p className="text-xs text-slate-600">
-                Audits working logs against host-country thresholds (minimum wage, max working hours) to prevent violations.
+                Potential future prompts for local wage and working-time review; no labor-law audit is currently offered.
               </p>
             </div>
 
             <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-indigo-600 uppercase">Pillar 7</span>
-                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Coming Q4</span>
+                <span className="rounded bg-indigo-100 px-2 py-0.5 text-[10px] font-semibold text-indigo-800">Not released</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">GDPR Data Sovereignty Guardrail</h3>
               <p className="text-xs text-slate-600">
-                Cross-references physical telemetry with GDPR Article 44 to flag restricted file access from high-risk zones.
+                Potential future privacy and transfer review tools; no geolocation-based GDPR monitoring is currently offered.
               </p>
             </div>
           </div>
