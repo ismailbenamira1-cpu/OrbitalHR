@@ -184,7 +184,8 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const regionalHeadcount = allEmployees.filter((e) => e.hostRegion === emp.hostRegion).length;
 
   const visaDaysLeft = pillars.visa.limit - emp.daysUsed;
-  const taxDaysLeft = pillars.pe.limit - emp.daysUsed;
+  const taxDaysLeft = (pillars.pe.subRisks?.taxResidency?.limit ?? rule.taxResidencyDays) - emp.daysUsed;
+  const peDaysLeft = (pillars.pe.subRisks?.pe?.limit ?? pillars.pe.limit) - emp.daysUsed;
   const peAlertBaseDays = rule.peAlertBaseDays;
   const minDaysToCliff = Math.min(...PILLARS.map((k) => pillars[k].limit - emp.daysUsed));
   const worst = worstLevel(pillars);
@@ -216,6 +217,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
     regionalHeadcount,
     visaDaysLeft,
     taxDaysLeft,
+    peDaysLeft,
     peAlertBaseDays,
     minDaysToCliff,
     isCliffAlert,
@@ -1099,14 +1101,29 @@ const generateAiBrief = async (employee) => {
                 <ShieldAlert className="h-4 w-4" /> Pillar 2: PE Tax Escrow & Overstay Shield
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.taxRuleShort}</p>
-              <p className="text-xs text-slate-600">
-                {selectedEmployee.pillars.pe.detail}
-              </p>
-              {selectedEmployee.rule.peAlertBaseDays !== selectedEmployee.rule.taxResidencyDays && (
-                <p className="text-xs font-semibold text-amber-700">
-                  PE alert base: {selectedEmployee.rule.peAlertBaseDays} days · Tax-residency reference: {selectedEmployee.rule.taxResidencyDays} days
-                </p>
-              )}
+              <div className="grid gap-2">
+                <div className="rounded-lg bg-rose-50 p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-xs text-rose-900">PE / employer-presence risk</strong>
+                    <LevelBadge level={selectedEmployee.pillars.pe.subRisks?.pe?.level || selectedEmployee.pillars.pe.level} />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.pe?.detail || selectedEmployee.pillars.pe.detail}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-rose-800">
+                    Orbital PE policy threshold: {selectedEmployee.pillars.pe.subRisks?.pe?.limit || selectedEmployee.pillars.pe.limit} days
+                  </p>
+                </div>
+                <div className="rounded-lg bg-amber-50 p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-xs text-amber-900">Individual tax-residency risk</strong>
+                    <LevelBadge level={selectedEmployee.pillars.pe.subRisks?.taxResidency?.level || 'OK'} />
+                  </div>
+                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.taxResidency?.detail || selectedEmployee.rule.taxRuleShort}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-amber-800">
+                    Reference limit: {selectedEmployee.pillars.pe.subRisks?.taxResidency?.limit || selectedEmployee.rule.taxResidencyDays} days
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-500">The overall Pillar 2 status uses the higher-risk result of these two separate tracks.</p>
               {selectedEmployee.rule.taxPrompt && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
                   <strong>Review prompt:</strong> {selectedEmployee.rule.taxPrompt}
