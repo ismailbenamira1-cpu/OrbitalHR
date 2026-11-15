@@ -45,7 +45,8 @@ test('server-owned roster and authenticated AI contract',async()=>{
       assert.ok(ai);
       const prompt=JSON.parse(ai.options.body);
       const payload=JSON.parse(prompt.messages.at(-1).content);
-      assert.equal(payload.employee?.name ?? payload.roster[0].name,'Server-owned employee');
+      assert.equal(payload.employee?.name ?? payload.roster[0].name,'Employee 1');
+      assert.doesNotMatch(JSON.stringify(prompt),/Server-owned employee|123e4567-e89b-12d3-a456-426614174000/);
       assert.ok(!JSON.stringify(payload).includes('Forged employee'));
       assert.match(prompt.system,/tax (?:residence|residency) is not a breach/i);
     }
@@ -339,4 +340,34 @@ test('Copilot alternative-model button sends the requested diagnostic query para
   assert.match(source,/fetch\(alt \? '\/api\/ai-diagnostic\?model=gemini-3\.5-flash-lite' : '\/api\/ai-diagnostic'/);
   assert.match(source,/onClick=\{\(\) => checkAiGeneration\(true\)\}/);
   assert.match(source,/generation failed: model=\$\{result\.model/);
+});
+
+test('AI provider never receives saved names, employee IDs or contact identifiers',async()=>{
+  const original=globalThis.fetch;
+  const sensitiveRow={...row,employee_name:'Alex Privacy-Test'};
+  try{
+    for(const [handler,body] of [
+      [copilot,{query:'Review Alex Privacy-Test at alex.private@example.com',history:[{role:'user',content:'Alex Privacy-Test called +1 202 555 0148'}]}],
+      [brief,{employeeId:ID}]
+    ]){
+      const requests=[];
+      globalThis.fetch=async(url,options={})=>{
+        if(url.endsWith('/auth/v1/user'))return Response.json({id:'user-1',aud:'authenticated'});
+        if(url.includes('consume_ai_daily_quota'))return Response.json(true);
+        if(url.includes('employee_rosters'))return Response.json([sensitiveRow]);
+        if(url.includes('api.anthropic.com')){
+          requests.push(JSON.parse(options.body));
+          return Response.json({content:[{type:'text',text:'Employee 1 needs a screening review.'}]});
+        }
+        throw Error('Unexpected network '+url);
+      };
+      const response=await handler({request:req(body),env});
+      assert.equal(response.status,200);
+      assert.equal(requests.length,1);
+      const provider=JSON.stringify(requests[0]);
+      assert.doesNotMatch(provider,/Alex Privacy-Test|alex.private@example.com|202 555 0148|123e4567-e89b-12d3-a456-426614174000/);
+      const received=await response.json();
+      assert.match(received.answer??received.brief,/Alex Privacy-Test/);
+    }
+  }finally{globalThis.fetch=original;}
 });
