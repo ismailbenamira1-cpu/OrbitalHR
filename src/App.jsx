@@ -1,3 +1,4 @@
+import { reportingEmployee, buildComplianceCsv } from './data/reporting.js';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   ShieldAlert,
@@ -258,7 +259,7 @@ function CopilotPanel({ roster }) {
     {
       role: 'assistant',
       content:
-        'Hi, I’m OrbitalCopilot. Ask me about your roster: visa day limits, PE risk, social security forms, or when to graduate someone off an EOR.',
+        'Hi, I’m OrbitalCopilot. Ask me about your roster: visa screening, employer PE, individual tax residency, social security, or payroll feasibility.',
     },
   ]);
   const endRef = useRef(null);
@@ -267,20 +268,7 @@ function CopilotPanel({ roster }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
-  const slimRoster = roster.map((e) => ({
-    name: e.name,
-    homeCountry: e.homeCountry,
-    hostRegion: e.hostRegion,
-    role: e.role,
-    daysUsed: e.daysUsed,
-    visaLimitDays: e.rule?.visaLimitDays,
-    minDaysToCliff: e.minDaysToCliff,
-    peRisk: e.peRisk,
-    ssInfo: { form: e.ssInfo?.form },
-    recommendation: e.recommendation,
-    annualSavingsVsEor: e.annualSavingsVsEor,
-    pillars: { ss: e.pillars?.ss?.level, pe: e.pillars?.pe?.level, visa: e.pillars?.visa?.level },
-  }));
+  const slimRoster = roster.map(reportingEmployee);
 
   async function send(text) {
     const q = (text ?? input).trim();
@@ -313,7 +301,7 @@ function CopilotPanel({ roster }) {
     }
   }
 
-  const starters = ['Who is closest to a visa limit?', 'Who has the highest PE risk?', 'Who should we graduate off an EOR?'];
+  const starters = ['Who is closest to a visa limit?', 'Who has the highest PE risk?', 'Who needs individual tax review?', 'Who is eligible for payroll feasibility review?'];
 
   if (!open) {
     return (
@@ -601,7 +589,7 @@ const generateAiBrief = async (employee) => {
     const response = await fetch('/api/employee-summary', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ employee }),
+      body: JSON.stringify({ employee: reportingEmployee(employee) }),
     });
 
     const raw = await response.text();
@@ -627,39 +615,7 @@ const generateAiBrief = async (employee) => {
 };
 
   function exportCsvReport() {
-    const headers = [
-      'Employee Name',
-      'Home Country',
-      'Host Region',
-      'Role',
-      'Days Used',
-      'Visa Limit (Days)',
-      'Days to Nearest Cliff',
-      'PE & Tax Risk',
-      'Social Security Certificate',
-      'Recommended Action',
-      'Annual Savings vs EOR (USD)',
-      'Social Security Status',
-      'PE & Tax Status',
-      'Visa Status',
-    ];
-    const rows = evaluated.map((e) => [
-      `"${e.name}"`,
-      `"${e.homeCountry}"`,
-      `"${e.hostRegion}"`,
-      `"${e.role}"`,
-      e.daysUsed,
-      e.rule.visaLimitDays,
-      e.minDaysToCliff,
-      e.peRisk,
-      `"${e.ssInfo.form}"`,
-      `"${e.recommendation}"`,
-      e.annualSavingsVsEor,
-      e.pillars.ss.level,
-      e.pillars.pe.level,
-      e.pillars.visa.level,
-    ]);
-    const csv = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const csv = buildComplianceCsv(evaluated);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
