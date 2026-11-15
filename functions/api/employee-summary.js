@@ -174,6 +174,10 @@ export async function onRequest({request,env}) {
     return reply({success:true,summary:complete ? text : baseline,brief:complete ? text : baseline,mode:complete?'ai':'structured-screening'});
 
   } catch(err) {
+    if (err?.detail === 'TIMEOUT' || err?.detail === 'CONNECTION_FAILED') {
+      console.error('employee-summary provider unavailable', {status:0, category:err.detail});
+      return reply({success:true,summary:baseline,brief:baseline,mode:'offline-screening',providerAvailable:false,notice:'Live Gemini generation is unavailable. This report was produced by OrbitalHR screening rules, not by the AI provider. It is not legal advice.'});
+    }
     console.error('employee-summary failed:',err.message);
     return reply({success:false,error:friendlyError(err)},503);
   }
