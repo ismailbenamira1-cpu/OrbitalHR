@@ -104,6 +104,7 @@ function ConfidenceBadge({ conf }) {
 }
 
 function PillarMeter({ p }) {
+  if (p.reviewRequired) return <div className="mt-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900"><strong>Country-specific review required</strong><p>{p.action}</p></div>;
   return (
     <div className="mt-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700">
       <div className="flex items-center justify-between">
@@ -159,7 +160,7 @@ function MatrixPanel() {
                     <td key={p} className="px-3 py-2">
                       <div className="text-slate-700">{c.rule}</div>
                       <div className="mt-1 font-semibold text-indigo-700">
-                        Watch {c.watchAt} · Critical {c.criticalAt} · Limit {c.limit}d
+                        {c.reviewRequired ? 'No regional legal limit — review required' : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
                       </div>
                       <div className="text-[10px] uppercase text-slate-400"><ConfidenceBadge conf={c.conf} /></div>
                     </td>
@@ -184,10 +185,10 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const regionalHeadcount = allEmployees.filter((e) => e.hostRegion === emp.hostRegion).length;
 
   const visaDaysLeft = pillars.visa.limit - emp.daysUsed;
-  const taxDaysLeft = (pillars.pe.subRisks?.taxResidency?.limit ?? rule.taxResidencyDays) - emp.daysUsed;
-  const peDaysLeft = (pillars.pe.subRisks?.pe?.limit ?? pillars.pe.limit) - emp.daysUsed;
+  const taxDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.taxResidency?.limit ?? rule.taxResidencyDays) - emp.daysUsed;
+  const peDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.pe?.limit ?? pillars.pe.limit) - emp.daysUsed;
   const peAlertBaseDays = rule.peAlertBaseDays;
-  const minDaysToCliff = Math.min(...PILLARS.map((k) => pillars[k].limit - emp.daysUsed));
+  const minDaysToCliff = Math.min(...PILLARS.filter((k) => !pillars[k].reviewRequired).map((k) => pillars[k].limit - emp.daysUsed));
   const worst = worstLevel(pillars);
   const isCliffAlert = worst === 'CRITICAL' || worst === 'BREACH';
   const peRisk = { OK: 'LOW', WATCH: 'ELEVATED', CRITICAL: 'CRITICAL', BREACH: 'CRITICAL' }[pillars.pe.level];
@@ -1092,7 +1093,7 @@ const generateAiBrief = async (employee) => {
                 <Globe className="h-4 w-4" /> Pillar 6: Visa & Right-to-Work Tracking
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.visaRuleShort}</p>
-              <p className="text-xs text-slate-600">Pathway: {selectedEmployee.rule.visaPathway}</p>
+              <p className="text-xs text-slate-600">Pathway: {selectedEmployee.rule.visaPathway}</p>{selectedEmployee.rule.regionalPlaceholder && <p className="text-xs text-amber-800">90/180 short-stay screening only; verify rolling travel history and national work permission.</p>}
               <PillarMeter p={selectedEmployee.pillars.visa} />
             </div>
 
@@ -1101,6 +1102,7 @@ const generateAiBrief = async (employee) => {
                 <ShieldAlert className="h-4 w-4" /> Pillar 2: PE Tax Escrow & Overstay Shield
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.taxRuleShort}</p>
+              {selectedEmployee.rule.regionalPlaceholder && <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><strong>{selectedEmployee.rule.jurisdictionNotice}</strong>{Object.entries(selectedEmployee.rule.countryReview).map(([country, note]) => <p key={country} className="mt-1"><strong>{country}:</strong> {note}</p>)}</div>}
               <div className="grid gap-2">
                 <div className="rounded-lg bg-rose-50 p-2.5">
                   <div className="flex items-center justify-between gap-2">
@@ -1109,7 +1111,7 @@ const generateAiBrief = async (employee) => {
                   </div>
                   <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.pe?.detail || selectedEmployee.pillars.pe.detail}</p>
                   <p className="mt-1 text-[11px] font-semibold text-rose-800">
-                    Orbital PE policy threshold: {selectedEmployee.pillars.pe.subRisks?.pe?.limit || selectedEmployee.pillars.pe.limit} days
+                    {selectedEmployee.pillars.pe.reviewRequired ? 'No regional PE threshold' : `Orbital PE policy threshold: ${selectedEmployee.pillars.pe.subRisks?.pe?.limit || selectedEmployee.pillars.pe.limit} days`}
                   </p>
                 </div>
                 <div className="rounded-lg bg-amber-50 p-2.5">
@@ -1119,7 +1121,7 @@ const generateAiBrief = async (employee) => {
                   </div>
                   <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.taxResidency?.detail || selectedEmployee.rule.taxRuleShort}</p>
                   <p className="mt-1 text-[11px] font-semibold text-amber-800">
-                    Reference limit: {selectedEmployee.pillars.pe.subRisks?.taxResidency?.limit || selectedEmployee.rule.taxResidencyDays} days
+                    {selectedEmployee.pillars.pe.reviewRequired ? 'No regional residency threshold' : `Reference limit: ${selectedEmployee.pillars.pe.subRisks?.taxResidency?.limit || selectedEmployee.rule.taxResidencyDays} days`}
                   </p>
                 </div>
               </div>
