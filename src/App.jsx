@@ -749,18 +749,18 @@ const generateAiBrief = async (employee) => {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-1">
               <span className="rounded-full bg-indigo-500/30 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-indigo-200">
-                Instant CFO ROI Model
+                Illustrative cost scenario
               </span>
               <h2 className="text-xl font-bold tracking-tight sm:text-2xl">
-                The Break-Even Threshold: EOR vs. Local Entity
+                EOR vs. Local Payroll — Non-binding Estimate
               </h2>
               <p className="text-xs text-slate-300 max-w-xl">
-                At ${eorFee}/mo per hire, managing 5 remote workers through an EOR costs <strong className="text-white">${(eorFee * 5 * 12).toLocaleString()}/yr</strong>. Graduating them to local payroll via Orbital HR drops your cost to <strong className="text-white">${((orbitalFee + 110) * 5 * 12).toLocaleString()}/yr</strong>.
+                Example only: 5 hires at ${eorFee}/month EOR fees represent <strong className="text-white">${(eorFee * 5 * 12).toLocaleString()}/year</strong>. An illustrative software-plus-payroll scenario at ${orbitalFee + 110}/month per hire would be <strong className="text-white">${((orbitalFee + 110) * 5 * 12).toLocaleString()}/year</strong>, excluding entity setup, tax, permits, advisers and local costs. Changing payroll requires separate legal review.
               </p>
             </div>
             <div className="flex items-center gap-4 rounded-xl bg-white/10 p-4 backdrop-blur-md border border-white/15">
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Potential Annual Savings</p>
+                <p className="text-[10px] uppercase tracking-wider text-indigo-300 font-semibold">Illustrative Annual Savings</p>
                 <p className="text-2xl font-black text-emerald-400">${kpis.totalAnnualSavings.toLocaleString()}</p>
               </div>
               <div className="h-8 w-px bg-white/20"></div>
@@ -780,7 +780,7 @@ const generateAiBrief = async (employee) => {
               <Users className="h-4 w-4 text-indigo-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-slate-900">{employees.length} Employees</p>
-            <p className="mt-1 text-xs text-slate-500">Across 7 verified host regions</p>
+            <p className="mt-1 text-xs text-slate-500">Across 7 modeled host options; legal review required</p>
           </div>
 
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-5">
