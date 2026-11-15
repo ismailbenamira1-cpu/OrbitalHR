@@ -58,6 +58,26 @@ if (!home.response) {
     const crossSite=await probe(path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer invalid-gate3-token',Origin:'https://untrusted.invalid'},body:validBody});
     note(path+' rejects cross-origin POST',crossSite.response?.status===403,'status '+(crossSite.response?.status??crossSite.error));
   }
+  // Gate 6: Read-only / harmless probes for the early-access path.
+  // Never submit a valid lead or exhaust rate limits in this audit.
+  const invalidLead=await probe('/api/early-access',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({work_email:'invalid',company_name:'',consent:false})
+  });
+  note('/api/early-access rejects invalid input',invalidLead.response?.status===400,'status '+(invalidLead.response?.status??invalidLead.error));
+  const foreignLead=await probe('/api/early-access',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Origin:'https://untrusted.invalid'},
+    body:JSON.stringify({work_email:'invalid',company_name:'',consent:false})
+  });
+  note('/api/early-access rejects cross-origin',foreignLead.response?.status===403,'status '+(foreignLead.response?.status??foreignLead.error));
+  const invalidChallenge=await probe('/api/early-access',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({work_email:'gate6@example.invalid',company_name:'Fictional Gate Six',company_size:'50-100',target_countries:'Canada',consent:true,turnstile_token:''})
+  });
+  note('/api/early-access rejects missing human challenge',invalidChallenge.response?.status===400,'status '+(invalidChallenge.response?.status??invalidChallenge.error));
   // No auth token: the Gemini diagnostics endpoint must remain unavailable to visitors.
   const health=await probe('/api/ai-diagnostic');
   note('/api/ai-diagnostic requires authentication',health.response?.status===401,'status '+(health.response?.status??health.error));
