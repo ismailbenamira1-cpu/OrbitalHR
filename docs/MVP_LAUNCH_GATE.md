@@ -2,6 +2,22 @@
 
 **Chosen release: public MVP for compliance screening and operational risk alerts only. Public launch is NOT YET APPROVED.** This scope deliberately excludes verified advisory, automated legal determinations and claims of approval for all 42 cells. The matrix can be shown only as clearly unverified screening assumptions, with prominent limits, mandatory adviser review for consequential decisions, and a documented restricted release assessment. Professional review is required before upgrading a specific corridor to verified advice.
 
+## Gate progress update — 15 November 2026
+
+- **Gate 1 (public deployment)**: PASSED, live HTTPS, asset deployment and private AI endpoint rejection checked by GitHub workflow.
+- **Gate 2 (private roster)**: PASSED, owner-scoped RLS plus user-confirmed save/edit/delete, refresh/sign-in persistence, and two-account browser isolation.
+- **Gate 3 (AI operational smoke)**: PASSED for MVP functional generation: user-confirmed Copilot and Employee Brief both generate useful responses using verified Gemini 3.5 Flash-Lite. Not a legal-accuracy signoff. Provider spending caps, commercial terms, privacy and incident response remain unresolved launch tasks.
+- **Gate 4 (lead abuse)**: IN PROGRESS. A staged Cloudflare Pages POST /api/early-access verifies Cloudflare Turnstile token/hostname/action server-side, validates inputs and writes with a server-only Supabase secret. The frontend switches to Turnstile on configuration. **Do not claim Gate 4 passed:** without VITE_TURNSTILE_SITE_KEY, the existing direct Supabase insert remains active and can be abused.
+
+### Gate 4 operational cutover (must be completed by Cloudflare project operator)
+
+1. Create a production Turnstile widget restricted to orbitalhr.pages.dev, copy its **public site key** into build variable `VITE_TURNSTILE_SITE_KEY`. In Cloudflare Pages Functions store `TURNSTILE_SECRET` as a secret and set `TURNSTILE_EXPECTED_HOSTNAME=orbitalhr.pages.dev`.
+2. Set `SUPABASE_URL` and **server-only** `SUPABASE_SECRET_KEY` (Supabase `sb_secret_` secret API key) in Cloudflare Functions, NOT any `VITE_*` variable. Legacy `SUPABASE_SERVICE_ROLE_KEY` is allowed by the endpoint but not preferred. Restrict secret access and rotate as needed.
+3. Redeploy frontend and Functions, verify the challenge appears on the registration form. Use a fictional company/email account to submit through `/api/early-access` and confirm exactly one row was inserted. Confirm expired/invalid tokens fail. Challenge is intentionally single-use.
+4. **Only after #3 passes** run `docs/GATE4_LEADS_CUTOVER.sql` in the connected Supabase SQL editor. This revokes all direct anonymous/authenticated INSERT access. Verify anonymous direct REST INSERT is rejected and legitimate Turnstile submission still works. Do not run in advance.
+5. Configure Cloudflare WAF rate limits and bot rules for `/api/early-access`, including capacity for spikes and sensible rules for privacy. Monitor challenge errors, denial rates, and spam without logging raw emails/IPs.
+6. Confirm there is no bypass from another public insert policy, and document rollback: temporarily disable public sign-up or restore a privileged backend path, **not** anonymous direct INSERT.
+
 ## Engineering controls implemented
 
 - Production Vite build, Playwright smoke test, 37 Node regression tests, and Cloudflare Functions build run in GitHub Actions (consult latest run before claiming green).
