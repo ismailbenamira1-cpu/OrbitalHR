@@ -69,7 +69,9 @@ const SS = {
   },
 };
 
-const ROLE_FACTOR = { 'Sales / Revenue': 0.33, Executive: 0.33, 'Manager / Team Lead': 0.67 };
+// Orbital PE risk-policy modifiers. These are deliberately conservative operational adjustments, not treaty or statutory thresholds.
+const ROLE_FACTOR = { 'Sales / Revenue': 0.75, Executive: 0.75, 'Manager / Team Lead': 0.9 };
+const PE_HIGH_RISK_FACTOR = 0.9; // policy adjustment for hosts with elevated PE exposure
 const SS_CERT = { 'Not filed': [15, 30, 60], Filed: [30, 60, 90] }; // policy: [watch, critical, breach] days
 // Policy schedule for corridors without a bilateral social-security agreement. These are Orbital operational alerts, not legal contribution thresholds.
 const SS_NO_AGREEMENT = [30, 60, 90]; // [watch, critical, breach] days
@@ -104,9 +106,11 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
   }
   if (pillar === 'pe') {
     const alertT = h.tax.alertT ?? h.tax.T;
-    const A = h.peBase === 'High' ? Math.round(alertT * 0.75) : alertT;
-    const limit = Math.min(alertT, Math.max(15, Math.round(A * (ROLE_FACTOR[role] ?? 1))));
-    const detailParts = [`Base PE risk: ${h.peBase}. Alert base: ${alertT} days. Role "${role}" sets the alert limit to ${limit} days.`];
+    const legalReferenceDays = h.tax.T;
+    const roleFactor = ROLE_FACTOR[role] ?? 1;
+    const highRiskFactor = h.peBase === 'High' ? PE_HIGH_RISK_FACTOR : 1;
+    const limit = Math.min(alertT, Math.max(15, Math.round(alertT * highRiskFactor * roleFactor)));
+    const detailParts = [`Orbital PE policy threshold: ${limit} days. Legal/treaty PE alert reference: ${alertT} days; tax-residency reference: ${legalReferenceDays} days. Base PE risk: ${h.peBase}. Role "${role}" applies a ${Math.round((1 - roleFactor) * 100)}% policy reduction${h.peBase === 'High' ? '; elevated host risk applies an additional 10% policy reduction' : ''}.`];
     if (h.tax.prompt) detailParts.push(`Review prompt: ${h.tax.prompt}`);
     if (h.tax.src) detailParts.push(`Sources: ${h.tax.src}`);
     detailParts.push(HOME_TAX[home]);
