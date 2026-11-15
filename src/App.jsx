@@ -104,7 +104,7 @@ function ConfidenceBadge({ conf }) {
 }
 
 function PillarMeter({ p }) {
-  if (p.reviewRequired) return <div className="mt-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900"><strong>Country-specific review required</strong><p>{p.action}</p></div>;
+  if (p.reviewRequired) return <div className="mt-2 rounded-lg bg-amber-50 p-2.5 text-xs text-amber-900"><strong>{p.pillar === 'visa' ? 'Authorised stay review required' : 'Country-specific review required'}</strong><p>{p.action}</p></div>;
   return (
     <div className="mt-2 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-700">
       <div className="flex items-center justify-between">
@@ -160,7 +160,7 @@ function MatrixPanel() {
                     <td key={p} className="px-3 py-2">
                       <div className="text-slate-700">{c.rule}</div>
                       <div className="mt-1 font-semibold text-indigo-700">
-                        {c.reviewRequired ? 'No regional legal limit — review required' : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
+                        {c.reviewRequired ? (p === 'visa' ? 'Actual entry grant required' : 'No regional legal limit — review required') : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
                       </div>
                       <div className="text-[10px] uppercase text-slate-400"><ConfidenceBadge conf={c.conf} /></div>
                     </td>
@@ -180,11 +180,11 @@ function MatrixPanel() {
 }
 
 function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
-  const rule = hostSummary(emp.hostRegion);
   const pillars = evaluatePillars(emp);
+  const rule = { ...hostSummary(emp.hostRegion), visaLimitDays: pillars.visa.limit };
   const regionalHeadcount = allEmployees.filter((e) => e.hostRegion === emp.hostRegion).length;
 
-  const visaDaysLeft = pillars.visa.limit - emp.daysUsed;
+  const visaDaysLeft = pillars.visa.limit === null ? null : pillars.visa.limit - emp.daysUsed;
   const taxDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.taxResidency?.limit ?? rule.taxResidencyDays) - emp.daysUsed;
   const peDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.pe?.limit ?? pillars.pe.limit) - emp.daysUsed;
   const peAlertBaseDays = rule.peAlertBaseDays;
@@ -428,6 +428,9 @@ export default function App() {
             daysUsed: row.days_used,
             currentSetup: row.current_setup,
             certificateStatus: row.certificate_status || 'Not filed',
+            visaAuthorizedDays: row.visa_authorized_days ?? null,
+            visaExtensionStatus: row.visa_extension_status || 'Not approved',
+            visaExtendedDays: row.visa_extended_days ?? null,
           }));
           setEmployees(mapped);
           setSelectedId(mapped[0].id);
@@ -503,12 +506,17 @@ export default function App() {
   async function handleSaveEmployee(e) {
     e.preventDefault();
     if (!empForm.name.trim()) return;
+    const visaFields = { visa_authorized_days: empForm.visaAuthorizedDays || null, visa_extension_status: empForm.visaExtensionStatus || 'Not approved', visa_extended_days: empForm.visaExtendedDays || null };
+    if (visaFields.visa_extension_status === 'Approved' && (!visaFields.visa_extended_days || !['Thailand','Philippines','Indonesia'].includes(empForm.hostRegion))) { alert('Enter the approved total stay for a supported extension route.'); return; }
+    const visaCheck = evaluatePillars(empForm).visa;
+    if (visaFields.visa_extension_status === 'Approved' && !visaCheck.extensionApproved) { alert('Approved total must exceed the initial grant and be within the modeled extension ceiling.'); return; }
 
     if (editingEmpId) {
       if (supabase && session?.user && !String(editingEmpId).startsWith('demo-')) {
-        await supabase
+        const { error } = await supabase
           .from('employee_rosters')
           .update({
+            ...visaFields,
             employee_name: empForm.name,
             home_country: empForm.homeCountry,
             host_region: empForm.hostRegion,
@@ -518,6 +526,7 @@ export default function App() {
             certificate_status: empForm.certificateStatus || 'Not filed',
           })
           .eq('id', editingEmpId);
+        if (error) { alert('Employee save failed: ' + error.message); return; }
       }
       setEmployees((prev) =>
         prev.map((item) =>
@@ -527,10 +536,11 @@ export default function App() {
     } else {
       let newId = `local-${Date.now()}`;
       if (supabase && session?.user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('employee_rosters')
           .insert([
             {
+              ...visaFields,
               user_id: session.user.id,
               employee_name: empForm.name,
               home_country: empForm.homeCountry,
@@ -543,7 +553,8 @@ export default function App() {
           ])
           .select()
           .single();
-        if (data?.id) newId = data.id;
+        if (error || !data?.id) { alert('Employee save failed: ' + (error?.message || 'No record returned')); return; }
+        newId = data.id;
       }
       const created = { ...empForm, id: newId, daysUsed: Number(empForm.daysUsed) };
       setEmployees((prev) => [...prev, created]);
@@ -960,7 +971,7 @@ const generateAiBrief = async (employee) => {
               </select>
               <select
                 value={empForm.hostRegion}
-                onChange={(e) => setEmpForm({ ...empForm, hostRegion: e.target.value })}
+                onChange={(e) => setEmpForm({ ...empForm, hostRegion: e.target.value, visaAuthorizedDays: null, visaExtensionStatus: 'Not approved', visaExtendedDays: null })}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               >
                 {HOSTS.map((region) => (
@@ -989,6 +1000,19 @@ const generateAiBrief = async (employee) => {
                 onChange={(e) => setEmpForm({ ...empForm, daysUsed: Number(e.target.value) })}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"
               />
+              <label className="text-xs text-slate-700">Actual initial authorised stay (days; blank if unknown)
+                <input type="number" min={1} max={365} step={1} value={empForm.visaAuthorizedDays ?? ''} onChange={(e) => setEmpForm({ ...empForm, visaAuthorizedDays: e.target.value === '' ? null : Number(e.target.value) })} className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+              </label>
+              {['Thailand','Philippines','Indonesia'].includes(empForm.hostRegion) && <>
+                <label className="text-xs text-slate-700">Extension decision
+                  <select value={empForm.visaExtensionStatus || 'Not approved'} onChange={(e) => setEmpForm({ ...empForm, visaExtensionStatus: e.target.value, visaExtendedDays: null })} className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                    {['Not approved','Pending','Approved','Denied'].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </label>
+                {empForm.visaExtensionStatus === 'Approved' && <label className="text-xs text-slate-700">Approved total stay (including initial days)
+                  <input required type="number" min={1} max={empForm.hostRegion === 'Philippines' ? 59 : 60} step={1} value={empForm.visaExtendedDays ?? ''} onChange={(e) => setEmpForm({ ...empForm, visaExtendedDays: e.target.value === '' ? null : Number(e.target.value) })} className="block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+                </label>}
+              </>}
               <select
                 value={empForm.currentSetup}
                 onChange={(e) => setEmpForm({ ...empForm, currentSetup: e.target.value })}
@@ -1041,7 +1065,7 @@ const generateAiBrief = async (employee) => {
                     <td className="px-4 py-3.5 font-medium text-slate-800">{emp.hostRegion}</td>
                     <td className="px-4 py-3.5">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900">{emp.daysUsed} / {emp.rule.visaLimitDays}d</span>
+                        <span className="font-semibold text-slate-900">{emp.daysUsed} / {emp.rule.visaLimitDays === null ? 'unknown' : emp.rule.visaLimitDays + 'd'}</span>
                         <LevelBadge level={emp.pillars.visa.level} />
                       </div>
                     </td>
@@ -1094,7 +1118,7 @@ const generateAiBrief = async (employee) => {
               </div>
               <p className="text-sm font-semibold text-slate-900">{selectedEmployee.rule.visaRuleShort}</p>
               <p className="text-xs text-slate-600">Pathway: {selectedEmployee.rule.visaPathway}</p>{selectedEmployee.rule.regionalPlaceholder && <p className="text-xs text-amber-800">90/180 short-stay screening only; verify rolling travel history and national work permission.</p>}
-              <PillarMeter p={selectedEmployee.pillars.visa} />
+              <p className="text-xs text-slate-600">{selectedEmployee.pillars.visa.detail} Extension status: {selectedEmployee.pillars.visa.visaExtensionStatus}.</p><PillarMeter p={selectedEmployee.pillars.visa} />
             </div>
 
             <div className="space-y-2 border-b border-slate-100 pb-4 lg:border-b-0 lg:border-r lg:pb-0 lg:pr-4">
