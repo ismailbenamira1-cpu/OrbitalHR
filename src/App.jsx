@@ -338,13 +338,28 @@ export default function App() {
   });
   const [leadMessage, setLeadMessage] = useState('');
   const [leadConsent, setLeadConsent] = useState(false);
+  const [rosterLoadError, setRosterLoadError] = useState('');
+  const lastSessionUser = useRef(null);
 
   useEffect(() => {
     if (!supabase) return;
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      const nextSession=data.session;
+      if (nextSession?.user?.id && lastSessionUser.current !== nextSession.user.id) {
+        lastSessionUser.current=nextSession.user.id;
+        setEmployees([]); setSelectedId(null);
+      }
+      setSession(nextSession);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      const nextUser=nextSession?.user?.id ?? null;
+      if (lastSessionUser.current !== nextUser) {
+        lastSessionUser.current=nextUser;
+        setEmployees(nextUser ? [] : DEFAULT_EMPLOYEES);
+        setSelectedId(nextUser ? null : DEFAULT_EMPLOYEES[0].id);
+        setAiSummaries({});
+        setRosterLoadError('');
+      }
       setSession(nextSession);
     });
     return () => listener.subscription.unsubscribe();
@@ -352,12 +367,17 @@ export default function App() {
 
   useEffect(() => {
     if (!supabase || !session?.user) return;
+    let active=true;
+    const userId=session.user.id;
+    setRosterLoadError('');
     supabase
       .from('employee_rosters')
       .select('*')
       .order('created_at', { ascending: true })
       .then(({ data, error }) => {
-        if (!error && data) {
+        if (!active || lastSessionUser.current !== userId) return;
+        if (error) { setRosterLoadError('Could not load saved roster. Please refresh or sign in again.'); return; }
+        if (data) {
           const mapped = data.map((row) => ({
             id: row.id,
             name: row.employee_name,
@@ -375,7 +395,8 @@ export default function App() {
           setSelectedId(mapped[0]?.id ?? null);
         }
       });
-  }, [session]);
+    return () => { active=false; };
+  }, [session?.user?.id]);
 
   const evaluated = useMemo(
     () => employees.map((e) => evaluateEmployee(e, employees, eorFee, orbitalFee)),
@@ -468,7 +489,8 @@ export default function App() {
             current_setup: empForm.currentSetup,
             certificate_status: empForm.certificateStatus || 'Not filed',
           })
-          .eq('id', editingEmpId);
+          .eq('id', editingEmpId)
+          .select('id').single();
         if (error) { alert('Employee save failed: ' + error.message); return; }
       }
       setEmployees((prev) =>
@@ -510,7 +532,8 @@ export default function App() {
 
   async function handleDeleteEmployee(id) {
     if (supabase && session?.user && !String(id).startsWith('demo-')) {
-      await supabase.from('employee_rosters').delete().eq('id', id);
+      const { data, error } = await supabase.from('employee_rosters').delete().eq('id', id).select('id');
+      if (error || !data?.length) { alert('Could not delete saved employee. Your roster was not changed.'); return; }
     }
     setEmployees((prev) => prev.filter((item) => item.id !== id));
   }
@@ -590,7 +613,7 @@ const generateAiBrief = async (employee) => {
               }`}
             >
               <Database className="h-3.5 w-3.5" />
-              {isSupabaseConfigured ? 'Supabase Live' : 'Demo Mode (Connect Supabase)'}
+              {session?.user ? 'Private Roster' : isSupabaseConfigured ? 'Guest Demo — sign in to save' : 'Demo Mode (Connect Supabase)'}
             </span>
 
             <button
