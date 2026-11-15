@@ -21,7 +21,8 @@ test('both AI endpoints receive current structured data and policy instructions'
       assert.match(captured.system,/Tax residency is not a violation/);
       assert.match(captured.system,/Null means unknown/);
       const payload=JSON.parse(captured.messages.at(-1).content);
-      assert.deepEqual(payload.employee ?? payload.roster[0],employee);
+      // JSON transport omits undefined optional fields; compare the wire representation.
+      assert.deepEqual(payload.employee ?? payload.roster[0],JSON.parse(JSON.stringify(employee)));
     }
   } finally { globalThis.fetch = originalFetch; }
 });
