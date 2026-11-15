@@ -7,7 +7,7 @@
 - **Gate 1 (public deployment)**: PASSED, live HTTPS, asset deployment and private AI endpoint rejection checked by GitHub workflow.
 - **Gate 2 (private roster)**: PASSED, owner-scoped RLS plus user-confirmed save/edit/delete, refresh/sign-in persistence, and two-account browser isolation.
 - **Gate 3 (AI operational smoke)**: PASSED for MVP functional generation: user-confirmed Copilot and Employee Brief both generate useful responses using verified Gemini 3.5 Flash-Lite. Not a legal-accuracy signoff. Provider spending caps, commercial terms, privacy and incident response remain unresolved launch tasks.
-- **Gate 4 (lead abuse)**: IN PROGRESS. A staged Cloudflare Pages POST /api/early-access verifies Cloudflare Turnstile token/hostname/action server-side, validates inputs and writes with a server-only Supabase secret. The frontend switches to Turnstile on configuration. **Do not claim Gate 4 passed:** without VITE_TURNSTILE_SITE_KEY, the existing direct Supabase insert remains active and can be abused.
+- **Gate 4 (lead abuse)**: PASSED for the tested protected registration pathway (15 November 2026). Production Turnstile server verification, server-only Supabase insertion after revoking anon/authenticated direct INSERT, and atomic hashed IP/email rate-limit counters were verified. Synthetic transaction tests confirmed 10/hour per IP and 3/day per email rejection; automated endpoint test confirms HTTP 429 and no insert after limit. Live production 429 exhaustion was not performed. Operational housekeeping remains: automatic purge of counters older than 7 days, ongoing monitoring and incident response.
 
 ### Gate 4 operational cutover (must be completed by Cloudflare project operator)
 
