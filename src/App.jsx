@@ -101,8 +101,8 @@ function LevelBadge({ level }) {
 }
 
 function ConfidenceBadge({ conf }) {
-  const styles = { verified: 'bg-emerald-50 text-emerald-700', secondary: 'bg-amber-50 text-amber-700', verify: 'bg-rose-50 text-rose-700' };
-  return <span className={`rounded px-1.5 py-0.5 ${styles[conf] || styles.verify}`}>{conf}</span>;
+  const label = { verified: 'Prior source review · legal sign-off pending', secondary: 'Secondary source · legal sign-off pending', verify: 'Source/legal review required' };
+  return <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">{label[conf] || label.verify}</span>;
 }
 
 function PillarMeter({ p }) {
@@ -117,7 +117,7 @@ function PillarMeter({ p }) {
       </div>
       <p className="mt-1.5 font-medium text-slate-800">{p.action}</p>
       <p className="mt-1 text-[10px] uppercase tracking-wide text-slate-400">
-        Source confidence: {p.conf} · verified {p.lastVerified}
+        Model source status: {p.conf} · Last ruleset review: {p.lastVerified} · Not a legal determination
       </p>
     </div>
   );
