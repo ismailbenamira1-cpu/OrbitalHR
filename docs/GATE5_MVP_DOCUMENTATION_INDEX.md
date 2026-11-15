@@ -15,6 +15,16 @@
 8. [AI technical minimization](GATE5_AI_DATA_MINIMIZATION.md) — source-verified model-prompt projection and risks.
 9. [Retention/Deletion Design](GATE5_RETENTION_DELETION_PLAN.md) and [Organization Closure Architecture](GATE5_ORGANIZATION_CLOSURE_ARCHITECTURE.md) — **DEFERRED**; future verified company closure and active-roster deletion within 30 days are not deployed.
 
+## Final supporting MVP drafts — completed 15 November 2026
+- [Data Processing Record](GATE5_DATA_PROCESSING_RECORD_DRAFT.md) — purpose, data classes, recipients, storage and pending retention.
+- [Interim Retention and Erasure SOP](GATE5_INTERIM_RETENTION_AND_ERASURE_SOP_DRAFT.md) — manual request approach and honestly deferred company closure.
+- [Privacy Risk Assessment](GATE5_PRIVACY_RISK_ASSESSMENT_DRAFT.md) — risks, controls and residual decisions for identifiable employees.
+- [Customer Onboarding and DPA Security Schedule](GATE5_MVP_CUSTOMER_ONBOARDING_AND_SECURITY_SCHEDULE_DRAFT.md) — applicant/customer authorization, minimum safeguards and contractual evidence.
+- [Customer Employee Notice Template](GATE5_EMPLOYEE_NOTICE_TEMPLATE_DRAFT.md) — editable employer-facing workforce disclosure.
+- [Draft Completion and Approval Register](GATE5_DRAFT_COMPLETION_AND_SIGNOFF.md) — final review checklist and publication/real-data launch prerequisites.
+
+**Drafting status:** COMPLETE for the present MVP scope. **Legal sign-off, functioning manual deletion/request procedures and publication status:** NOT COMPLETE. The remaining tasks are reviews, implementation and operational validation, not missing drafts.
+
 ## Website implementation staging
 - [Prepared legal page components and footer activation guide](GATE5_WEBSITE_LEGAL_PAGE_STAGING.md). Drafts are not mounted at public routes and approval flag remains disabled; the MVP footer displays only a privacy contact and an 'in preparation' notice. Automated staging tests enforce this boundary.
 
