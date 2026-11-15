@@ -115,7 +115,9 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     if (h.tax.src) detailParts.push(`Sources: ${h.tax.src}`);
     detailParts.push(HOME_TAX[home]);
     // Tax-residency milestones belong to the residency track, not the PE policy limit.
-    return { ...base, ...bounds(limit), rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
+    const taxResidency = { ...bounds(legalReferenceDays), rule: h.tax.short, detail: `Tax-residency track: ${h.tax.short}`, conf: h.tax.conf, milestones: h.tax.milestones || [] };
+    const pePolicy = { ...bounds(limit), rule: `PE policy threshold: ${limit} days`, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
+    return { ...base, ...pePolicy, taxResidency, pePolicy, rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
   }
   const s = SS[home][host];
   if (s.covered) {
@@ -141,6 +143,28 @@ export function evaluatePillars(emp) {
   const out = {};
   PILLARS.forEach((p) => {
     const c = pillarCell(home, host, p, { role: emp.role, cert: emp.certificateStatus || 'Not filed' });
+
+    if (p === 'pe' && c.pePolicy && c.taxResidency) {
+      const peLevel = levelFor(days, c.pePolicy, c.pePolicy.milestones);
+      const taxLevel = levelFor(days, c.taxResidency, c.taxResidency.milestones);
+      const level = rank(taxLevel) > rank(peLevel) ? taxLevel : peLevel;
+      const taxMs = c.taxResidency.milestones.find((m) => days >= m.day - (m.lead ?? 7) && days < c.taxResidency.limit);
+      const actionBase = level === taxLevel && taxLevel !== 'OK'
+        ? 'Review individual tax-residency exposure with tax counsel.'
+        : ACTIONS.pe[level];
+      out[p] = {
+        ...c,
+        level,
+        days,
+        action: taxMs && taxLevel === 'WATCH' ? `${taxMs.label}. ${actionBase}` : actionBase,
+        subRisks: {
+          pe: { ...c.pePolicy, level: peLevel, days, action: ACTIONS.pe[peLevel] },
+          taxResidency: { ...c.taxResidency, level: taxLevel, days, action: taxMs && taxLevel === 'WATCH' ? `${taxMs.label}. Review individual tax-residency exposure with tax counsel.` : 'Review individual tax-residency exposure with tax counsel.' },
+        },
+      };
+      return;
+    }
+
     const level = levelFor(days, c, c.milestones);
     const ms = c.milestones.find((m) => days >= m.day - (m.lead ?? 7) && days < c.limit);
     out[p] = { ...c, level, days, action: ms && level === 'WATCH' ? `${ms.label}. ${ACTIONS[p][level]}` : ACTIONS[p][level] };
