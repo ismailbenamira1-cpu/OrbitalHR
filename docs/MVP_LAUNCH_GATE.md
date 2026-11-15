@@ -19,6 +19,13 @@
 6. Optionally attach a custom Cloudflare-proxied domain later to use zone-level WAF rate-limiting rules; the app-level limiter above functions on `orbitalhr.pages.dev`.
 7. Confirm there is no bypass from another public insert policy, and document rollback: temporarily disable public sign-up or restore a privileged backend path, **not** anonymous direct INSERT.
 
+## Gate 5 draft legal documents (15 November 2026)
+
+- Draft Privacy Notice: [`GATE5_PRIVACY_NOTICE_DRAFT.md`](GATE5_PRIVACY_NOTICE_DRAFT.md) — not published; requires the individual's current legal identity, verified privacy email/contact address, vendor processing assessment, retention/deletion implementation, and legal approval.
+- Draft customer DPA: [`GATE5_CUSTOMER_DPA_DRAFT.md`](GATE5_CUSTOMER_DPA_DRAFT.md) — not signed; requires parties, commercial terms, security schedule, cross-border and subprocessor review, incident/erasure commitments and legal approval.
+- User-confirmed OrbitalCopilot and Employee Brief still work and show local employee names after AI request minimization. This is pseudonymization, not guaranteed anonymization.
+- **Gate 5 remains OPEN**: drafting documents alone does not establish privacy compliance or authorize accepting real employee records.
+
 ## Engineering controls implemented
 
 - Production Vite build, Playwright smoke test, 37 Node regression tests, and Cloudflare Functions build run in GitHub Actions (consult latest run before claiming green).
