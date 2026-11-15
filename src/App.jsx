@@ -261,13 +261,13 @@ function CopilotPanel({ session, onSignIn }) {
     try{
       const {data: refreshed,error: sessionError}=await supabase.auth.getSession();
       if(sessionError || !refreshed.session?.access_token)throw new Error('Sign in again.');
-      const response=await fetch('/api/ai-diagnostic',{
+      const response=await fetch(alt ? '/api/ai-diagnostic?model=gemini-3.5-flash-lite' : '/api/ai-diagnostic',{
         method:'POST',headers:{Authorization:`Bearer ${refreshed.session.access_token}`}
       });
       const result=await response.json();
       const description=result.success
         ? `Minimal Gemini generation succeeded: model=${result.model}, HTTP ${result.httpStatus}, elapsed=${result.elapsedMs} ms, outputChars=${result.outputChars}, finishReason=${result.finishReason}. No employee data was sent.`
-        : `Minimal Gemini generation failed: stage=${result.stage||'unknown'}, category=${result.category||result.error||'unknown'}, HTTP=${result.httpStatus??response.status}, elapsed=${result.elapsedMs??'unknown'} ms. No employee data was sent.`;
+        : `Minimal Gemini generation failed: model=${result.model||'unknown'}, stage=${result.stage||'unknown'}, category=${result.category||result.error||'unknown'}, HTTP=${result.httpStatus??response.status}, elapsed=${result.elapsedMs??'unknown'} ms. No employee data was sent.`;
       setMessages(m=>[...m,{role:'assistant',content:description}]);
     }catch(err){
       setMessages(m=>[...m,{role:'assistant',content:'Minimal Gemini generation diagnostic failed: '+err.message}]);
