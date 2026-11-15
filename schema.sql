@@ -52,6 +52,8 @@ create table if not exists public.employee_rosters (
   updated_at timestamptz not null default now()
 );
 
+create index if not exists employee_rosters_user_id_idx on public.employee_rosters (user_id);
+
 alter table public.employee_rosters enable row level security;
 
 revoke all on table public.employee_rosters from anon, authenticated;
