@@ -1113,7 +1113,7 @@ const generateAiBrief = async (employee) => {
                         </div>
 
                         {aiSummaries[emp.id] && (
-                          <div className="w-64 text-left p-2.5 bg-indigo-50/95 border border-indigo-200 rounded-lg text-xs text-slate-700 whitespace-pre-line shadow-lg">
+                          <div className="w-80 max-h-96 overflow-y-auto text-left p-2.5 bg-indigo-50/95 border border-indigo-200 rounded-lg text-xs text-slate-700 whitespace-pre-line shadow-lg">
                             <strong className="text-indigo-900 block mb-0.5 font-semibold">AI Compliance Brief:</strong>
                             <p>{aiSummaries[emp.id]}</p>
                           </div>
