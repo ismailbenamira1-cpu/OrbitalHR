@@ -34,6 +34,13 @@ try {
   assert.match(csv,/"30","60","Approved","60"/);
   assert.match(csv,/"Employer PE Status"/);
   assert.match(csv,/"Individual Tax Residency Status"/);
+  // Guest access to AI must route to sign-in, never invoke an anonymous AI request.
+  await page.getByRole('button',{name:'Company Login'}).click();
+  await page.getByText('Sign In to Save Your Roster').waitFor();
+  await page.getByRole('button',{name:'Close',exact:true}).click();
+  await page.getByRole('button',{name:'Ask Copilot'}).click();
+  await page.getByText('Sign In to Save Your Roster').waitFor();
+  await page.getByRole('button',{name:'Close',exact:true}).click();
   assert.deepEqual(errors,[]);
-  console.log('Browser smoke passed: matrix, add/edit, extension, CSV, no uncaught errors');
+  console.log('Browser smoke passed: matrix, add/edit, extension, CSV, guest login gate, no uncaught errors');
 } finally { await browser.close(); }
