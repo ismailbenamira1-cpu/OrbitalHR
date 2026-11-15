@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { onRequest as copilot } from '../functions/api/compliance-assistant.js';
 import { onRequest as brief } from '../functions/api/employee-summary.js';
+import { onRequest as diagnostic } from '../functions/api/ai-diagnostic.js';
 
 const ID='123e4567-e89b-12d3-a456-426614174000';
 const API='https://demo.supabase.co';
@@ -188,7 +189,7 @@ test('Gemini 3.8 request uses supported low thinking config without deprecated t
     const r=await copilot({request:req({query:'What requires review?'}),env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'}});
     assert.equal(r.status,200);
     assert.equal(upstream.length,1);
-    assert.equal(upstream[0].generationConfig.thinkingConfig.thinkingLevel,'LOW');
+    assert.equal(upstream[0].generationConfig.thinkingConfig.thinkingLevel,'low');
     assert.equal('temperature' in upstream[0].generationConfig,false);
   }finally{globalThis.fetch=previous;}
 });
@@ -220,5 +221,46 @@ test('Gemini network outage provides a transparently labeled source-based overvi
    const narrow=await copilot({request:req({query:'hello'}),env:e});
    assert.equal(narrow.status,503);
    assert.match((await narrow.json()).error,/could not be reached/);
+ }finally{globalThis.fetch=previous;}
+});
+
+test('non-generating Gemini connectivity probe authenticates and returns model metadata status',async()=>{
+ const previous=globalThis.fetch;
+ try {
+   const requests=[];
+   globalThis.fetch=async(url,options={})=>{
+     requests.push(String(url));
+     if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'user-1',aud:'authenticated'});
+     if(String(url).includes('generativelanguage.googleapis.com/v1beta/models/'))return Response.json({name:'models/gemini-3.8-flash'});
+     throw Error('Unexpected '+url);
+   };
+   const request=new Request('https://app.example.test/api/ai-diagnostic',{headers:{authorization:'Bearer valid-token'}});
+   const res=await diagnostic({request,env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'test',GEMINI_API_KEY:'mock'}});
+   assert.equal(res.status,200);
+   const body=await res.json();
+   assert.equal(body.success,true);
+   assert.equal(body.httpStatus,200);
+   assert.equal(body.model,'gemini-3.8-flash');
+   assert.equal(requests.length,2);
+   assert.ok(!requests.some(x=>x.includes('generateContent')));
+   assert.ok(!requests.some(x=>x.includes('consume_ai_daily_quota')));
+   const noAuth=await diagnostic({request:new Request('https://app.example.test/api/ai-diagnostic'),env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'test',GEMINI_API_KEY:'mock'}});
+   assert.equal(noAuth.status,401);
+ } finally {globalThis.fetch=previous;}
+});
+test('Gemini diagnostic does not disclose provider response or credentials on failure',async()=>{
+ const previous=globalThis.fetch;
+ try{
+  globalThis.fetch=async(url)=>{
+    if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'user-1',aud:'authenticated'});
+    if(String(url).includes('generativelanguage.googleapis.com'))return Response.json({error:{message:'private diagnostic secret'}},{status:403});
+    throw Error('Unexpected '+url);
+  };
+  const request=new Request('https://app.example.test/api/ai-diagnostic',{headers:{authorization:'Bearer valid-token'}});
+  const res=await diagnostic({request,env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'test',GEMINI_API_KEY:'never-expose-this'}});
+  assert.equal(res.status,502);
+  const text=await res.text();
+  assert.match(text,/credential-or-permission/);
+  assert.doesNotMatch(text,/private diagnostic secret|never-expose-this/);
  }finally{globalThis.fetch=previous;}
 });
