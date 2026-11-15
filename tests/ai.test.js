@@ -307,3 +307,28 @@ test('minimal generation diagnostic maps upstream provider failures without leak
    assert.doesNotMatch(raw,/private google account information|do-not-expose/);
  }finally{globalThis.fetch=prev;}
 });
+
+test('alternative-model diagnostic only targets allowlisted Gemini Flash-Lite and no roster data',async()=>{
+ const original=globalThis.fetch;const requests=[];
+ try{
+   globalThis.fetch=async(url,options={})=>{
+     requests.push({url:String(url),options});
+     if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+     if(String(url).includes('consume_ai_daily_quota'))return Response.json(true);
+     if(String(url).includes('generateContent'))return Response.json({candidates:[{content:{parts:[{text:'READY'}]},finishReason:'STOP'}]});
+     throw Error('Unexpected '+url);
+   };
+   const e={SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'};
+   const req1=new Request('https://app.example.test/api/ai-diagnostic?model=gemini-3.5-flash-lite',{method:'POST',headers:{authorization:'Bearer valid-token'}});
+   const r=await diagnostic({request:req1,env:e});
+   assert.equal(r.status,200);
+   assert.equal((await r.json()).model,'gemini-3.5-flash-lite');
+   const upstream=requests.find(x=>x.url.includes(':generateContent'));
+   assert.match(upstream.url,/gemini-3\.5-flash-lite/);
+   assert.equal(JSON.parse(upstream.options.body).generationConfig.thinkingConfig.thinkingLevel,'minimal');
+   const invalid=new Request('https://app.example.test/api/ai-diagnostic?model=arbitrary-admin-model',{method:'POST',headers:{authorization:'Bearer valid-token'}});
+   const next=await diagnostic({request:invalid,env:e});
+   assert.equal((await next.json()).model,'gemini-3.8-flash');
+   assert.ok(!requests.some(x=>x.url.includes('arbitrary-admin-model')));
+ }finally{globalThis.fetch=original;}
+});
