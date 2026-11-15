@@ -72,7 +72,9 @@ async function callClaude(env, { system, messages, maxTokens, temperature }) {
 
 async function callGemini(env, { system, messages, maxTokens, temperature }) {
   const key = env.GEMINI_API_KEY || env.API_KEY;
-  const models = env.GEMINI_MODEL ? [env.GEMINI_MODEL] : ['gemini-3.5-flash', 'gemini-2.5-flash'];
+  // New Gemini API projects may not have access to legacy 2.5 models.
+  // Prefer current Flash. A configured model may be tried first, then supported backups.
+  const models = [...new Set([env.GEMINI_MODEL, 'gemini-3.8-flash', 'gemini-3.5-flash-lite'].filter(Boolean))];
   const contents = messages.map((m) => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
@@ -82,7 +84,7 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
     try {
       const res = await timedFetch(
         'gemini',
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
@@ -95,19 +97,26 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
       );
       if (res.ok) {
         const data = await res.json();
-        const text = (data.candidates?.[0]?.content?.parts || []).map((p) => p.text || '').join('');
-        if (text) return text;
-        lastErr = new AIError('gemini', 200, `empty response from ${model}`);
-      } else {
-        lastErr = await errorFrom('gemini', res);
-        lastErr.detail = `${model}: ${lastErr.detail}`.slice(0, 200);
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const answer = parts.map((p) => p.text || '').join('').trim();
+        if (answer) return answer;
+        lastErr = new AIError('gemini', 502, `Model ${model} returned no answer.`);
+        // Try an alternative only when the model returns an empty response.
+        continue;
       }
+      lastErr = await errorFrom('gemini', res);
+      lastErr.detail = `${model}: ${lastErr.detail}`.slice(0, 200);
+      // Do not retry other models for billing, credentials, request errors or rate limits:
+      // those conditions are not model-availability issues and attempts may incur costs.
+      if (res.status === 404) continue;
+      break;
     } catch (e) {
       lastErr = e;
+      break;
     }
   }
   console.error('Gemini API error status', lastErr?.status);
-  throw lastErr || new AIError('gemini', 0, 'no model responded');
+  throw lastErr || new AIError('gemini', 0, 'no supported model responded');
 }
 
 // Uses Claude if ANTHROPIC_API_KEY is set, otherwise falls back to Gemini.
