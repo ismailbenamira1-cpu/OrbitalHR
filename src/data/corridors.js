@@ -37,7 +37,7 @@ const HOST = {
     peBase: 'High', payroll: 95, entity: 3800,
   },
   Philippines: {
-    visa: { limit: 59, conf: 'secondary', short: '30 days visa-free on arrival, extendable at the Bureau of Immigration to 59 days; extension must be filed before day 30', pathway: '9A tourist extension or 9G pre-arranged employment visa', milestones: [{ day: 30, lead: 7, label: 'File Bureau of Immigration extension before day 30' }] },
+    visa: { limit: 59, initialLimit: 30, extendedLimit: 59, extensionRequiredAt: 30, extensionDiscretionary: true, conf: 'secondary', short: '30 days visa-free on arrival, extendable at the Bureau of Immigration to 59 days; extension must be filed before day 30', pathway: '9A tourist extension or 9G pre-arranged employment visa', milestones: [{ day: 30, lead: 7, label: 'File Bureau of Immigration extension before day 30' }] },
     tax: { T: 180, alertT: 90, conf: 'secondary', peConf: 'secondary', short: 'Compensation for services performed in the Philippines is Philippine-source and can be taxable from day one. 180 days changes the domestic tax treatment; treaty relief is narrower and the US threshold needs professional confirmation (90 vs 183 days reported by sources).', src: 'NIRC/BIR guidance via professional summaries; treaty threshold secondary', milestones: [] },
     peBase: 'Moderate', payroll: 90, entity: 3500,
   },
@@ -47,7 +47,7 @@ const HOST = {
     peBase: 'Moderate', payroll: 100, entity: 3600,
   },
   Indonesia: {
-    visa: { limit: 60, conf: 'secondary', short: 'Visa on arrival: 30 days, extendable once by 30 days (60 total); tourist status does not allow work', pathway: 'E33G remote worker KITAS or PT PMA with work KITAS', milestones: [{ day: 30, lead: 7, label: 'Extend visa on arrival before day 30' }] },
+    visa: { limit: 60, initialLimit: 30, extendedLimit: 60, extensionRequiredAt: 30, extensionDiscretionary: true, conf: 'secondary', short: 'Visa on arrival: 30 days, extendable once by 30 days (60 total); tourist status does not allow work', pathway: 'E33G remote worker KITAS or PT PMA with work KITAS', milestones: [{ day: 30, lead: 7, label: 'Extend visa on arrival before day 30' }] },
     tax: { T: 183, alertT: 120, conf: 'verified', peConf: 'secondary', short: 'Resident if present more than 183 days in any 12 months, or present during the tax year with intent to reside; intent can be evidenced by a qualifying permit, visa, contract, lease or family relocation. Treaty service-PE and employment tests use 120 days in the reviewed US/Canada materials.', src: 'DGT residency guidance; treaty threshold secondary', milestones: [] },
     peBase: 'High', payroll: 95, entity: 4200,
   },
@@ -94,7 +94,7 @@ export function levelFor(days, b, milestones = []) {
   return lv;
 }
 
-export function pillarCell(home, host, pillar, { role = 'Individual Contributor', cert = 'Not filed' } = {}) {
+export function pillarCell(home, host, pillar, { role = 'Individual Contributor', cert = 'Not filed', visaAuthorizedDays = null, visaExtensionStatus = 'Not approved', visaExtendedDays = null } = {}) {
   const h = HOST[host];
   const base = { pillar, home, host, title: PILLAR_TITLES[pillar], lastVerified: LAST_VERIFIED, milestones: [] };
   if (host === 'Schengen Area' && pillar !== 'visa') {
@@ -109,13 +109,18 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     const extendedLimit = h.visa.extendedLimit ?? h.visa.limit;
     const extensionRequiredAt = h.visa.extensionRequiredAt ?? null;
     const entryAssigned = h.visa.entryAssigned ?? false;
-    const limit = entryAssigned ? initialLimit : extendedLimit;
+    const positiveDays = (v) => Number.isInteger(Number(v)) && Number(v) > 0 ? Number(v) : null;
+    const granted = positiveDays(visaAuthorizedDays);
+    const approvedTotal = positiveDays(visaExtendedDays);
+    const extensionApproved = visaExtensionStatus === 'Approved' && approvedTotal !== null && approvedTotal > (granted ?? initialLimit) && approvedTotal <= extendedLimit && !entryAssigned;
+    const reviewRequired = entryAssigned && (granted === null || granted > initialLimit);
+    const limit = reviewRequired ? null : extensionApproved ? approvedTotal : Math.min(granted ?? initialLimit, initialLimit);
     const milestones = [...(h.visa.milestones || [])];
     if (extensionRequiredAt && !milestones.some((m) => m.day === extensionRequiredAt)) {
       milestones.push({ day: extensionRequiredAt, lead: 7, label: h.visa.extensionDiscretionary ? 'Extension decision is discretionary: apply before this date or plan departure' : 'Extension required before this date' });
     }
-    const detail = [h.visa.pathway, host === 'Schengen Area' ? '90/180 is a regional short-stay rule, not permission to work. Check national work rules and rolling travel history.' : null, `Initial authorised stay: ${initialLimit} days.`, extendedLimit > initialLimit ? `Maximum possible stay: ${extendedLimit} days${h.visa.extensionDiscretionary ? ' only if the extension is granted' : ''}.` : null, entryAssigned ? 'Use the stay actually granted at entry; the legal ceiling is not a guaranteed entitlement.' : null].filter(Boolean).join(' ');
-    return { ...base, ...bounds(limit), rule: h.visa.short, detail, conf: h.visa.conf, milestones, initialLimit, extendedLimit, extensionRequiredAt, extensionDiscretionary: h.visa.extensionDiscretionary ?? false, entryAssigned };
+    const detail = [h.visa.pathway, host === 'Schengen Area' ? '90/180 is a regional short-stay rule, not permission to work. Check national work rules and rolling travel history.' : null, entryAssigned ? 'Entry grant must be recorded; 180 days is only the ceiling.' : `Initial route ceiling: ${initialLimit} days.`, extendedLimit > initialLimit ? `Maximum possible stay: ${extendedLimit} days${h.visa.extensionDiscretionary ? ' only if the extension is granted' : ''}.` : null, entryAssigned ? 'Use the stay actually granted at entry; the legal ceiling is not a guaranteed entitlement.' : null].filter(Boolean).join(' ');
+    return { ...base, ...(limit === null ? {limit:null,watchAt:null,criticalAt:null} : bounds(limit)), rule: h.visa.short, detail, conf: h.visa.conf, milestones: extensionApproved ? [] : milestones, initialLimit: entryAssigned ? null : initialLimit, extendedLimit, extensionRequiredAt, extensionDiscretionary: h.visa.extensionDiscretionary ?? false, entryAssigned, reviewRequired, extensionApproved, visaExtensionStatus, grantedDays: granted };
   }
   if (pillar === 'pe') {
     const alertT = h.tax.alertT ?? h.tax.T;
@@ -155,8 +160,9 @@ export function evaluatePillars(emp) {
   const days = Number(emp.daysUsed) || 0;
   const out = {};
   PILLARS.forEach((p) => {
-    const c = pillarCell(home, host, p, { role: emp.role, cert: emp.certificateStatus || 'Not filed' });
+    const c = pillarCell(home, host, p, { role: emp.role, cert: emp.certificateStatus || 'Not filed', visaAuthorizedDays: emp.visaAuthorizedDays, visaExtensionStatus: emp.visaExtensionStatus, visaExtendedDays: emp.visaExtendedDays });
 
+    if (p === 'visa' && c.reviewRequired) { out[p] = { ...c, level: 'WATCH', days, action: 'Record the actual authorised stay granted at entry before relying on a countdown.' }; return; }
     if (c.reviewRequired) {
       const review = { ...c, level: 'WATCH', days, action: SCHENGEN_NOTICE };
       out[p] = p === 'pe' ? { ...review, subRisks: { pe: { ...c.pePolicy, level: 'WATCH', days, action: SCHENGEN_NOTICE }, taxResidency: { ...c.taxResidency, level: 'WATCH', days, action: SCHENGEN_NOTICE } } } : review;
@@ -185,7 +191,7 @@ export function evaluatePillars(emp) {
 
     const level = levelFor(days, c, c.milestones);
     const ms = c.milestones.find((m) => days >= m.day - (m.lead ?? 7) && days < c.limit);
-    out[p] = { ...c, level, days, action: ms && level === 'WATCH' ? `${ms.label}. ${ACTIONS[p][level]}` : ACTIONS[p][level] };
+    out[p] = { ...c, level, days, action: p === 'visa' && level === 'BREACH' ? 'Authorised-stay alert boundary reached: verify expiry immediately; depart or regularise before permission expires.' : p === 'visa' && level === 'OK' ? 'Below recorded or route screening limit; verify actual permission and work rights.' : ms && level === 'WATCH' ? `${ms.label}. ${ACTIONS[p][level]}` : ACTIONS[p][level] };
   });
   return out;
 }
