@@ -15,6 +15,9 @@
 8. [AI technical minimization](GATE5_AI_DATA_MINIMIZATION.md) — source-verified model-prompt projection and risks.
 9. [Retention/Deletion Design](GATE5_RETENTION_DELETION_PLAN.md) and [Organization Closure Architecture](GATE5_ORGANIZATION_CLOSURE_ARCHITECTURE.md) — **DEFERRED**; future verified company closure and active-roster deletion within 30 days are not deployed.
 
+## Website implementation staging
+- [Prepared legal page components and footer activation guide](GATE5_WEBSITE_LEGAL_PAGE_STAGING.md). Drafts are not mounted at public routes and approval flag remains disabled; the MVP footer displays only a privacy contact and an 'in preparation' notice. Automated staging tests enforce this boundary.
+
 ## Scope of this work
 - Documentation work only, including GitHub drafts and checklist. No production schema change, no deletion of existing employee data, no new public legal acceptance UI.
 - Current roster model is **per login** with verified owner-scoped RLS, not multi-user company-tenanted.
