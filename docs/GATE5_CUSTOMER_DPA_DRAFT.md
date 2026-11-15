@@ -4,7 +4,7 @@
 ## Parties and precedence
 This Data Processing Agreement (“DPA”) is proposed between:
 - **Customer:** [LEGAL CUSTOMER ENTITY NAME AND ADDRESS].
-- **Service provider:** [CURRENT LEGAL OPERATOR NAME AND ADDRESS], offering the OrbitalHR product (the planned Canadian company is not yet incorporated).
+- **Service provider:** [CURRENT LEGAL OPERATOR NAME AND ADDRESS], offering the OrbitalHR product (the planned Canadian company is not yet incorporated). **Privacy inquiries contact:** ismailbenamira1@gmail.com.
 
 The parties' final commercial agreement and applicable privacy laws govern where this document is silent. This draft must not be treated as an executed contract.
 
@@ -41,7 +41,7 @@ Service Provider shall disclose verified processing jurisdictions, assess materi
 Service Provider shall provide reasonable assistance with data access, correction, deletion and regulatory inquiries, consistent with law and customer instructions; validate authority and protect other customers' data. Customer remains responsible for decisions involving employees and will provide necessary context. Agree response channel and deadlines [TO AGREE].
 
 ## 7. Security incidents
-Service Provider shall investigate, contain and notify Customer of confirmed or reasonably suspected incidents affecting Customer Personal Data without undue delay and within the contractual period [TO AGREE], with sufficient information for Customer to assess legal notifications. Parties will cooperate on regulator/individual notifications as required. Define incident contact and on-call plan before signing.
+Service Provider shall investigate, contain and notify Customer of confirmed or reasonably suspected incidents affecting Customer Personal Data without undue delay and within the contractual period [TO AGREE], with sufficient information for Customer to assess legal notifications. Parties will cooperate on regulator/individual notifications as required. **Provisional privacy/incident contact:** ismailbenamira1@gmail.com. Define incident escalation, on-call coverage and contractual notice timelines before signing.
 
 ## 8. Deletion, return and retention
 Upon authorized termination or request, Service Provider shall return or delete Customer Personal Data, unless retention is required by law or subject to documented backup-cycle limitations. Define operational export formats, deletion milestones, backup treatment, verification process and costs [TO AGREE]. **Automated account-wide erasure and retention have not yet been confirmed implemented; this provision cannot be promised as operational today.**
