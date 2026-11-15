@@ -264,3 +264,46 @@ test('Gemini diagnostic does not disclose provider response or credentials on fa
   assert.doesNotMatch(text,/private diagnostic secret|never-expose-this/);
  }finally{globalThis.fetch=previous;}
 });
+
+test('minimal generation diagnostic sends only fixed prompt and consumes quota once',async()=>{
+ const prev=globalThis.fetch;const requested=[];
+ try{
+   globalThis.fetch=async(url,options={})=>{
+     requested.push({url:String(url),options});
+     if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+     if(String(url).includes('consume_ai_daily_quota'))return Response.json(true);
+     if(String(url).includes('generateContent'))return Response.json({candidates:[{content:{parts:[{text:'READY'}]},finishReason:'STOP'}]});
+     throw Error('Unexpected '+url);
+   };
+   const request=new Request('https://app.example.test/api/ai-diagnostic',{method:'POST',headers:{authorization:'Bearer valid-token'}});
+   const response=await diagnostic({request,env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'mock'}});
+   assert.equal(response.status,200);
+   const data=await response.json();
+   assert.equal(data.stage,'generation');
+   assert.equal(data.success,true);
+   assert.equal(data.outputChars,5);
+   assert.equal(requested.filter(x=>x.url.includes('consume_ai_daily_quota')).length,1);
+   assert.equal(requested.filter(x=>x.url.includes('generateContent')).length,1);
+   const content=JSON.stringify(JSON.parse(requested.at(-1).options.body));
+   assert.match(content,/Reply with the single word READY/);
+   assert.doesNotMatch(content,/Server-owned employee/);
+   assert.equal(JSON.parse(requested.at(-1).options.body).generationConfig.maxOutputTokens,48);
+ }finally{globalThis.fetch=prev;}
+});
+test('minimal generation diagnostic maps upstream provider failures without leaking secrets',async()=>{
+ const prev=globalThis.fetch;
+ try{
+   globalThis.fetch=async(url)=>{
+     if(String(url).endsWith('/auth/v1/user'))return Response.json({id:'test',aud:'authenticated'});
+     if(String(url).includes('consume_ai_daily_quota'))return Response.json(true);
+     if(String(url).includes('generateContent'))return Response.json({error:{message:'private google account information'}},{status:400});
+     throw Error('Unexpected '+url);
+   };
+   const request=new Request('https://app.example.test/api/ai-diagnostic',{method:'POST',headers:{authorization:'Bearer valid-token'}});
+   const response=await diagnostic({request,env:{SUPABASE_URL:API,SUPABASE_ANON_KEY:'public-test-key',GEMINI_API_KEY:'do-not-expose'}});
+   assert.equal(response.status,502);
+   const raw=await response.text();
+   assert.match(raw,/request-invalid/);
+   assert.doesNotMatch(raw,/private google account information|do-not-expose/);
+ }finally{globalThis.fetch=prev;}
+});
