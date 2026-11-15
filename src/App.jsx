@@ -160,7 +160,7 @@ function MatrixPanel() {
                     <td key={p} className="px-3 py-2">
                       <div className="text-slate-700">{c.rule}</div>
                       <div className="mt-1 font-semibold text-indigo-700">
-                        {c.reviewRequired ? (p === 'visa' ? 'Actual entry grant required' : 'No regional legal limit — review required') : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
+                        {c.reviewRequired ? (p === 'visa' ? (c.host === 'Schengen Area' ? 'Rolling travel history required' : 'Actual entry grant required') : 'No regional legal limit — review required') : `Watch ${c.watchAt} · Critical ${c.criticalAt} · Limit ${c.limit}d`}
                       </div>
                       <div className="text-[10px] uppercase text-slate-400"><ConfidenceBadge conf={c.conf} /></div>
                     </td>
@@ -185,10 +185,11 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const regionalHeadcount = allEmployees.filter((e) => e.hostRegion === emp.hostRegion).length;
 
   const visaDaysLeft = pillars.visa.limit === null ? null : pillars.visa.limit - emp.daysUsed;
-  const taxDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.taxResidency?.limit ?? rule.taxResidencyDays) - emp.daysUsed;
+  const taxDaysLeft = pillars.pe.subRisks.taxResidency.limit == null ? null : pillars.pe.subRisks.taxResidency.limit - emp.daysUsed;
   const peDaysLeft = pillars.pe.reviewRequired ? null : (pillars.pe.subRisks?.pe?.limit ?? pillars.pe.limit) - emp.daysUsed;
   const peAlertBaseDays = rule.peAlertBaseDays;
-  const minDaysToCliff = Math.min(...PILLARS.filter((k) => !pillars[k].reviewRequired).map((k) => pillars[k].limit - emp.daysUsed));
+  const countdowns = [pillars.visa, pillars.ss, pillars.pe.subRisks.pe, pillars.pe.subRisks.taxResidency].filter(p => !p.reviewRequired && Number.isFinite(p.limit)).map(p => p.limit - emp.daysUsed);
+  const minDaysToCliff = countdowns.length ? Math.min(...countdowns) : null;
   const worst = worstLevel(pillars);
   const isCliffAlert = worst === 'CRITICAL' || worst === 'BREACH';
   const peLevel = pillars.pe.subRisks.pe.level;
@@ -206,7 +207,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const tax = pillars.pe.subRisks.taxResidency;
   const ss = pillars.ss;
   if (rule.regionalPlaceholder) addAction('jurisdiction', 'WATCH', 'Identify actual destination country and verify national work, tax and social-security rules');
-  if (visa.reviewRequired || visa.level !== 'OK') addAction('visa', visa.level, visa.reviewRequired ? 'Record actual authorised stay' : visa.level === 'BREACH' ? 'Urgently verify immigration expiry and regularise status or depart' : 'Review immigration permission and extension or departure options');
+  if (visa.reviewRequired || visa.level !== 'OK') addAction('visa', visa.level, visa.reviewRequired ? (rule.regionalPlaceholder ? 'Review rolling Schengen travel history and national work permission' : 'Record actual authorised stay') : visa.level === 'BREACH' ? 'Urgently verify immigration expiry and regularise status or depart' : 'Review immigration permission and extension or departure options');
   if (!pe.reviewRequired && pe.level !== 'OK') addAction('pe', pe.level, 'Review employer PE exposure with corporate tax counsel');
   if (!tax.reviewRequired && tax.level !== 'OK') addAction('taxResidency', tax.level, 'Review individual tax residency and filing obligations');
   if (!ss.reviewRequired && ss.level !== 'OK') addAction('ss', ss.level, ss.action);
@@ -218,7 +219,7 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const payrollReview = payrollReviewEligible ? (regionalHeadcount >= 5 ? 'Assess local entity feasibility' : 'Assess local payroll feasibility') : null;
   const recommendation = complianceActions[0]?.text || payrollReview || 'Maintain current setup; verify ongoing compliance';
   const annualEorCost = eorMonthlyFee * 12;
-  const annualOrbitalLocalCost = (orbitalMonthlyFee + rule.localPayrollMonthlyUSD) * 12;
+  const annualOrbitalLocalCost = rule.localPayrollMonthlyUSD == null ? null : (orbitalMonthlyFee + rule.localPayrollMonthlyUSD) * 12;
   const annualSavingsVsEor = payrollReviewEligible && emp.currentSetup === 'EOR ($599/mo)'
     ? Math.max(0, annualEorCost - annualOrbitalLocalCost)
     : 0;
@@ -862,11 +863,11 @@ const generateAiBrief = async (employee) => {
 
           <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-5">
             <div className="flex items-center justify-between text-amber-800">
-              <span className="text-xs font-medium uppercase">30-Day Cliff Alerts</span>
+              <span className="text-xs font-medium uppercase">Compliance Escalations</span>
               <AlertTriangle className="h-4 w-4 text-amber-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-amber-950">{kpis.cliffCount} Approaching Limit</p>
-            <p className="mt-1 text-xs text-amber-800">Visa or tax residency within 30 days</p>
+            <p className="mt-1 text-xs text-amber-800">Critical or breach policy alerts across compliance tracks</p>
           </div>
 
           <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-5">
@@ -906,7 +907,7 @@ const generateAiBrief = async (employee) => {
           <div className="flex flex-wrap items-center gap-2">
             {[
               { id: 'ALL', label: `All (${evaluated.length})` },
-              { id: 'CLIFF', label: `30-Day Cliff (${kpis.cliffCount})` },
+              { id: 'CLIFF', label: `Compliance Alerts (${kpis.cliffCount})` },
               { id: 'GRADUATE', label: `Payroll Review (${kpis.graduateCount})` },
               { id: 'PE', label: `Employer PE (${kpis.peHighCount})` },
               { id: 'TAX', label: `Tax Residency (${kpis.taxHighCount})` },
@@ -1180,7 +1181,7 @@ const generateAiBrief = async (employee) => {
                   </div>
                   <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks.taxResidency.detail}</p><p className="mt-1 text-xs font-medium text-slate-800">{selectedEmployee.pillars.pe.subRisks.taxResidency.action}</p>
                   <p className="mt-1 text-[11px] font-semibold text-amber-800">
-                    {selectedEmployee.pillars.pe.reviewRequired ? 'No regional residency threshold' : `Reference limit: ${selectedEmployee.pillars.pe.subRisks?.taxResidency?.limit || selectedEmployee.rule.taxResidencyDays} days`}
+                    {selectedEmployee.pillars.pe.subRisks.taxResidency.limit == null ? 'No single residency day threshold modeled; review applicable criteria' : `Day-count screening reference: ${selectedEmployee.pillars.pe.subRisks.taxResidency.limit} days (not a legal determination)`}
                   </p>
                 </div>
               </div>
