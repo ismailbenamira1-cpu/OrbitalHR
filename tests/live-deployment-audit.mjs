@@ -38,6 +38,16 @@ if (!home.response) {
     if(js.body){
       const frontendSupabaseConfigured = js.body.includes('https://icqxruzjlnykxvpgzoyh.supabase.co');
       note('Frontend Supabase URL embedded in production bundle',frontendSupabaseConfigured,frontendSupabaseConfigured?'Project URL configured':'Frontend build has no recognizable Supabase project URL');
+      // Gate 6: Verify the actual PUBLIC JS bundle contains the current safe-screening release.
+      // A successful API probe alone can pass against an older deployment.
+      const releaseMarkers=[
+        'Screen cross-border mobility risks before making HR decisions.',
+        '7 Modeled Destinations',
+        'Pre-launch evaluation: use fictional employee records only.',
+        'Screening only — not legal advice'
+      ];
+      for(const marker of releaseMarkers)note('Live frontend release marker: '+marker,js.body.includes(marker));
+      note('Legacy unverified-rules advertising absent',!js.body.includes('Verified 2026 Global Tax & Visa Rules'));
       const screens=['Cross-Border Mobility Screening','Screening-only MVP','sign in to save'];
       for(const marker of screens)note('Latest MVP text: '+marker,js.body.includes(marker));
     }
