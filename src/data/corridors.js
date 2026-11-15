@@ -80,7 +80,7 @@ const ROLE_FACTOR = { 'Sales / Revenue': 0.75, Executive: 0.75, 'Manager / Team 
 const PE_HIGH_RISK_FACTOR = 0.9; // policy adjustment for hosts with elevated PE exposure
 const SS_CERT = { 'Not filed': [15, 30, 60], Filed: [30, 60, 90] }; // policy: [watch, critical, breach] days
 // Policy schedule for corridors without a bilateral social-security agreement. These are Orbital operational alerts, not legal contribution thresholds.
-const SS_NO_AGREEMENT = [30, 60, 90]; // [watch, critical, breach] days
+const SS_NO_AGREEMENT = [1, 30, 60]; // [watch, critical, breach] days
 
 // Policy boundaries: WATCH at ~67% of the limit, CRITICAL 5+ days (about 17%) before it. Example: 90-day limit -> watch 60, critical 75.
 export const bounds = (limit) => ({ limit, watchAt: Math.round(limit * 0.67), criticalAt: limit - Math.max(5, Math.round(limit * 0.17)) });
@@ -145,9 +145,15 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     return { ...base, limit: l, watchAt: w, criticalAt: c, rule: s.form, detail: `Certificate ${cert.toLowerCase()}. ${s.note}`, conf: s.conf, covered: true };
   }
   const [w, c, l] = SS_NO_AGREEMENT;
-  return { ...base, limit: l, watchAt: w, criticalAt: c, rule: s.form, detail: `${s.note} Orbital policy alerts apply at ${w}/${c}/${l} days (WATCH/CRITICAL/BREACH); these are operational risk thresholds, not legal social-security contribution thresholds.`, conf: s.conf, covered: false, milestones: [{ day: w, lead: 0, label: 'No treaty relief: confirm whether host social security applies' }] };
+  return { ...base, limit: l, watchAt: w, criticalAt: c, rule: s.form, detail: `${s.note} Review before work starts; obligations may arise from the first day of work. Orbital policy alerts apply at ${w}/${c}/${l} days (WATCH/CRITICAL/BREACH); these are internal escalation deadlines, not legal contribution thresholds or grace periods. Treaty certificate relief is unavailable.`, conf: s.conf, covered: false, policyOnly: true, certificateApplicable: false, milestones: [{ day: w, lead: 0, label: 'No treaty relief: confirm whether host social security applies' }] };
 }
 
+const SS_NO_AGREEMENT_ACTIONS = {
+  OK: 'Pre-assignment: confirm home and host social-security obligations before work begins.',
+  WATCH: 'Confirm home and host coverage, registration and contribution obligations now; dual contributions may apply from day one.',
+  CRITICAL: 'Escalate unresolved coverage to HR and a local social-security adviser; confirm registration, contributions and any arrears immediately.',
+  BREACH: 'Internal escalation deadline reached, not a finding of statutory breach. Escalate immediately and remediate any confirmed registration or contribution obligations.',
+};
 const ACTIONS = {
   visa: { OK: 'Within permitted stay.', WATCH: 'Plan an extension or a visa pathway now.', CRITICAL: 'Alert HR: apply for an extension or arrange departure or a work visa.', BREACH: 'Overstay risk: leave or regularise status immediately.' },
   pe: { OK: 'No action needed.', WATCH: 'Review role, contract signing and home-office use in the host country.', CRITICAL: 'Alert HR and tax: limit contracting authority and prepare local payroll or an entity.', BREACH: 'Likely PE or tax residency exposure: engage a tax adviser now.' },
@@ -162,6 +168,11 @@ export function evaluatePillars(emp) {
   PILLARS.forEach((p) => {
     const c = pillarCell(home, host, p, { role: emp.role, cert: emp.certificateStatus || 'Not filed', visaAuthorizedDays: emp.visaAuthorizedDays, visaExtensionStatus: emp.visaExtensionStatus, visaExtendedDays: emp.visaExtendedDays });
 
+    if (p === 'ss' && c.covered === false) {
+      const level = levelFor(days, c, c.milestones);
+      out[p] = { ...c, level, days, action: SS_NO_AGREEMENT_ACTIONS[level] };
+      return;
+    }
     if (p === 'visa' && c.reviewRequired) { out[p] = { ...c, level: 'WATCH', days, action: 'Record the actual authorised stay granted at entry before relying on a countdown.' }; return; }
     if (c.reviewRequired) {
       const review = { ...c, level: 'WATCH', days, action: SCHENGEN_NOTICE };
