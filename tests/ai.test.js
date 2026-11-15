@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { onRequest as copilot } from '../functions/api/compliance-assistant.js';
@@ -331,4 +332,12 @@ test('alternative-model diagnostic only targets allowlisted Gemini Flash-Lite an
    assert.equal((await next.json()).model,'gemini-3.8-flash');
    assert.ok(!requests.some(x=>x.url.includes('arbitrary-admin-model')));
  }finally{globalThis.fetch=original;}
+});
+
+test('Copilot alternative-model button sends the requested diagnostic query parameter',()=>{
+  const source=readFileSync(new URL('../src/App.jsx',import.meta.url),'utf8');
+  assert.match(source,/async function checkAiGeneration\(alt = false\)/);
+  assert.match(source,/fetch\(alt \? '\/api\/ai-diagnostic\?model=gemini-3\.5-flash-lite' : '\/api\/ai-diagnostic'/);
+  assert.match(source,/onClick=\{\(\) => checkAiGeneration\(true\)\}/);
+  assert.match(source,/generation failed: model=\$\{result\.model/);
 });
