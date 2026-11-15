@@ -1,5 +1,6 @@
 import { apiReply, authorizeAi, readLimitedJson } from '../_shared/security.js';
 import { loadOwnedRoster } from '../_shared/roster.js';
+import { makePrivateAiRoster, restoreNames } from '../_shared/ai-privacy.js';
 import { hasRequiredBriefSections, screeningBrief } from '../_shared/ai-responses.js';
 // Helpers (inlined so this file has no imports).
 const reply = apiReply;
@@ -160,11 +161,13 @@ export async function onRequest({request,env}) {
   // A complete source-grounded screening backstop is prepared before invoking the model.
   // If the model omits a mandatory track, return the complete backstop, never a partial brief.
   const baseline=screeningBrief(employee);
+  const privateContext=makePrivateAiRoster([employee]);
+  const privateBaseline=screeningBrief(privateContext.roster[0]);
   const prompt=JSON.stringify({
     task:'Explain the screening for this employee clearly and thoroughly, using seven exact section headings and the saved details below. Complete every heading; give a prioritized, specific next-step plan and a SEPARATE payroll/EOR feasibility recommendation. Explain what is known, unknown and why each result needs attention. Target 900-1400 words if the available facts support it, without padding or repeating disclaimers.',
     requiredHeadings:['1. IMMIGRATION & WORK PERMISSION','2. EMPLOYER PERMANENT ESTABLISHMENT (PE)','3. INDIVIDUAL TAX RESIDENCY','4. SOCIAL SECURITY','5. PRIORITIZED NEXT STEPS','6. PAYROLL & EOR FEASIBILITY','7. INFORMATION STILL NEEDED'],
-    employee,
-    screeningReference:baseline
+    employee:privateContext.roster[0],
+    screeningReference:privateBaseline
   });
   try {
     const text=await callAI(env,{
@@ -172,7 +175,7 @@ export async function onRequest({request,env}) {
       messages:[{role:'user',content:prompt}],maxTokens:3500,temperature:0.2
     });
     const complete=hasRequiredBriefSections(text);
-    return reply({success:true,summary:complete ? text : baseline,brief:complete ? text : baseline,mode:complete?'ai':'structured-screening'});
+    return reply({success:true,summary:complete ? restoreNames(text,privateContext.aliases) : baseline,brief:complete ? restoreNames(text,privateContext.aliases) : baseline,mode:complete?'ai':'structured-screening'});
 
   } catch(err) {
     if (err?.detail === 'TIMEOUT' || err?.detail === 'CONNECTION_FAILED') {
