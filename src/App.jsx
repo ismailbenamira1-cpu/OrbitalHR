@@ -191,7 +191,11 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
   const minDaysToCliff = Math.min(...PILLARS.filter((k) => !pillars[k].reviewRequired).map((k) => pillars[k].limit - emp.daysUsed));
   const worst = worstLevel(pillars);
   const isCliffAlert = worst === 'CRITICAL' || worst === 'BREACH';
-  const peRisk = { OK: 'LOW', WATCH: 'ELEVATED', CRITICAL: 'CRITICAL', BREACH: 'CRITICAL' }[pillars.pe.level];
+  const peLevel = pillars.pe.subRisks.pe.level;
+  const taxResidencyLevel = pillars.pe.subRisks.taxResidency.level;
+  const riskLabel = { OK: 'LOW', WATCH: 'ELEVATED', CRITICAL: 'CRITICAL', BREACH: 'CRITICAL' };
+  const peRisk = riskLabel[peLevel];
+  const taxResidencyRisk = riskLabel[taxResidencyLevel];
   const ssInfo = { form: pillars.ss.rule, note: pillars.ss.detail };
 
   const shouldGraduateToEntity = regionalHeadcount >= 5;
@@ -223,6 +227,9 @@ function evaluateEmployee(emp, allEmployees, eorMonthlyFee, orbitalMonthlyFee) {
     minDaysToCliff,
     isCliffAlert,
     peRisk,
+    peLevel,
+    taxResidencyRisk,
+    taxResidencyLevel,
     ssInfo,
     recommendation,
     annualEorCost,
@@ -447,15 +454,17 @@ export default function App() {
     if (filterMode === 'CLIFF') return evaluated.filter((e) => e.isCliffAlert);
     if (filterMode === 'GRADUATE') return evaluated.filter((e) => e.recommendation.startsWith('Graduate'));
     if (filterMode === 'PE') return evaluated.filter((e) => e.peRisk !== 'LOW');
+    if (filterMode === 'TAX') return evaluated.filter((e) => e.taxResidencyRisk !== 'LOW');
     return evaluated;
   }, [evaluated, filterMode]);
 
   const kpis = useMemo(() => {
     const cliffCount = evaluated.filter((e) => e.isCliffAlert).length;
     const peHighCount = evaluated.filter((e) => e.peRisk !== 'LOW').length;
+    const taxHighCount = evaluated.filter((e) => e.taxResidencyRisk !== 'LOW').length;
     const graduateCount = evaluated.filter((e) => e.recommendation.startsWith('Graduate')).length;
     const totalAnnualSavings = evaluated.reduce((sum, e) => sum + e.annualSavingsVsEor, 0);
-    return { cliffCount, peHighCount, graduateCount, totalAnnualSavings };
+    return { cliffCount, peHighCount, taxHighCount, graduateCount, totalAnnualSavings };
   }, [evaluated]);
 
   const selectedEmployee = useMemo(
@@ -830,7 +839,7 @@ const generateAiBrief = async (employee) => {
         </div>
 
         {/* KPI Strip */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-xl border border-slate-200 bg-white p-5">
             <div className="flex items-center justify-between text-slate-500">
               <span className="text-xs font-medium uppercase">Tracked Roster</span>
@@ -851,11 +860,20 @@ const generateAiBrief = async (employee) => {
 
           <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-5">
             <div className="flex items-center justify-between text-rose-800">
-              <span className="text-xs font-medium uppercase">PE & Tax Exposure</span>
+              <span className="text-xs font-medium uppercase">Employer PE Exposure</span>
               <ShieldAlert className="h-4 w-4 text-rose-600" />
             </div>
             <p className="mt-2 text-2xl font-bold text-rose-950">{kpis.peHighCount} Elevated / Critical</p>
-            <p className="mt-1 text-xs text-rose-800">Requires local payroll or role guardrails</p>
+            <p className="mt-1 text-xs text-rose-800">Employer PE policy alerts; includes jurisdiction review</p>
+          </div>
+
+          <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-5">
+            <div className="flex items-center justify-between text-amber-800">
+              <span className="text-xs font-medium uppercase">Individual Tax Residency</span>
+              <ShieldAlert className="h-4 w-4 text-amber-600" />
+            </div>
+            <p className="mt-2 text-2xl font-bold text-amber-950">{kpis.taxHighCount} Elevated / Critical</p>
+            <p className="mt-1 text-xs text-amber-800">Individual tax review alerts; not a residency determination</p>
           </div>
 
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-5">
@@ -879,7 +897,8 @@ const generateAiBrief = async (employee) => {
               { id: 'ALL', label: `All (${evaluated.length})` },
               { id: 'CLIFF', label: `30-Day Cliff (${kpis.cliffCount})` },
               { id: 'GRADUATE', label: `Graduate to Local (${kpis.graduateCount})` },
-              { id: 'PE', label: `PE / Tax Risk (${kpis.peHighCount})` },
+              { id: 'PE', label: `Employer PE (${kpis.peHighCount})` },
+              { id: 'TAX', label: `Tax Residency (${kpis.taxHighCount})` },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1049,7 +1068,7 @@ const generateAiBrief = async (employee) => {
                 <th className="px-4 py-3">Employee & Home</th>
                 <th className="px-4 py-3">Host Destination</th>
                 <th className="px-4 py-3">Pillar 6: Visa & Stay</th>
-                <th className="px-4 py-3">Pillar 2: PE & Tax</th>
+                <th className="px-4 py-3">Pillar 2: PE / Tax Residency</th>
                 <th className="px-4 py-3">Pillar 1: Social Security</th>
                 <th className="px-4 py-3">Graduation Action</th>
                 <th className="px-4 py-3 text-right">Manage</th>
@@ -1070,7 +1089,11 @@ const generateAiBrief = async (employee) => {
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <LevelBadge level={emp.pillars.pe.level} />
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2"><span className="text-xs text-slate-600">PE</span><LevelBadge level={emp.peLevel} /></div>
+                        <div className="flex items-center gap-2"><span className="text-xs text-slate-600">Tax residency</span><LevelBadge level={emp.taxResidencyLevel} /></div>
+                        {emp.pillars.pe.reviewRequired && <span className="text-[11px] text-amber-800">Country review required</span>}
+                      </div>
                     </td>
                     <td className="px-4 py-3.5">
                       <LevelBadge level={emp.pillars.ss.level} />
@@ -1131,9 +1154,9 @@ const generateAiBrief = async (employee) => {
                 <div className="rounded-lg bg-rose-50 p-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <strong className="text-xs text-rose-900">PE / employer-presence risk</strong>
-                    <LevelBadge level={selectedEmployee.pillars.pe.subRisks?.pe?.level || selectedEmployee.pillars.pe.level} />
+                    <LevelBadge level={selectedEmployee.peLevel} />
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.pe?.detail || selectedEmployee.pillars.pe.detail}</p>
+                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks.pe.detail}</p><p className="mt-1 text-xs font-medium text-slate-800">{selectedEmployee.pillars.pe.subRisks.pe.action}</p>
                   <p className="mt-1 text-[11px] font-semibold text-rose-800">
                     {selectedEmployee.pillars.pe.reviewRequired ? 'No regional PE threshold' : `Orbital PE policy threshold: ${selectedEmployee.pillars.pe.subRisks?.pe?.limit || selectedEmployee.pillars.pe.limit} days`}
                   </p>
@@ -1141,9 +1164,9 @@ const generateAiBrief = async (employee) => {
                 <div className="rounded-lg bg-amber-50 p-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <strong className="text-xs text-amber-900">Individual tax-residency risk</strong>
-                    <LevelBadge level={selectedEmployee.pillars.pe.subRisks?.taxResidency?.level || 'OK'} />
+                    <LevelBadge level={selectedEmployee.taxResidencyLevel} />
                   </div>
-                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks?.taxResidency?.detail || selectedEmployee.rule.taxRuleShort}</p>
+                  <p className="mt-1 text-xs text-slate-600">{selectedEmployee.pillars.pe.subRisks.taxResidency.detail}</p><p className="mt-1 text-xs font-medium text-slate-800">{selectedEmployee.pillars.pe.subRisks.taxResidency.action}</p>
                   <p className="mt-1 text-[11px] font-semibold text-amber-800">
                     {selectedEmployee.pillars.pe.reviewRequired ? 'No regional residency threshold' : `Reference limit: ${selectedEmployee.pillars.pe.subRisks?.taxResidency?.limit || selectedEmployee.rule.taxResidencyDays} days`}
                   </p>
@@ -1158,7 +1181,7 @@ const generateAiBrief = async (employee) => {
               {selectedEmployee.rule.sources && (
                 <p className="text-[11px] text-slate-500"><strong>Evidence:</strong> {selectedEmployee.rule.sources}</p>
               )}
-              <PillarMeter p={selectedEmployee.pillars.pe} />
+              <div className="text-xs text-slate-600">Combined Pillar 2 alert: <LevelBadge level={selectedEmployee.pillars.pe.level} /></div>
             </div>
 
             <div className="space-y-2">
