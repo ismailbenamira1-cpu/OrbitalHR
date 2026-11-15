@@ -3,6 +3,35 @@ import { apiReply, readLimitedJson, verifySameOrigin } from '../_shared/security
 // Gate 4 staged endpoint. Activate only after the matching Turnstile site key,
 // server secret and Supabase backend secret are set and direct grants are revoked.
 // Neither secret may be prefixed VITE_ or returned to the client.
+async function hashedLimiterKey(secret, kind, value) {
+  const encoder=new TextEncoder();
+  const key=await crypto.subtle.importKey('raw',encoder.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const signature=await crypto.subtle.sign('HMAC',key,encoder.encode(kind+':'+value));
+  return Array.from(new Uint8Array(signature),b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function applyLeadRateLimit(request, env, apiUrl, headers, email) {
+  if (env.LEAD_RATE_LIMIT_ENABLED !== 'true') return { allowed:true };
+  const ip=request.headers.get('CF-Connecting-IP') || '';
+  // No trustworthy Cloudflare source IP means we fail closed rather than bypass the IP limit.
+  if (!ip || ip.length>80) return {allowed:false,unavailable:true};
+  try {
+    const [ipHash,emailHash]=await Promise.all([
+      hashedLimiterKey(env.TURNSTILE_SECRET,'lead-ip',ip),
+      hashedLimiterKey(env.TURNSTILE_SECRET,'lead-email',email)
+    ]);
+    const response=await fetch(apiUrl.replace(/\/$/,'')+'/rest/v1/rpc/consume_lead_rate_limit',{
+      method:'POST',headers,
+      body:JSON.stringify({p_ip_hash:ipHash,p_email_hash:emailHash}),
+      signal:AbortSignal.timeout(8000)
+    });
+    if(!response.ok) return {allowed:false,unavailable:true};
+    const allowed=await response.json();
+    if(allowed!==true && allowed!==false) return {allowed:false,unavailable:true};
+    return {allowed};
+  }catch { return {allowed:false,unavailable:true}; }
+}
+
 export async function onRequest({ request, env }) {
   if (request.method !== 'POST') return apiReply({success:false,error:'Method not allowed'},405);
   if (!verifySameOrigin(request)) return apiReply({success:false,error:'Origin not allowed'},403);
@@ -46,6 +75,14 @@ export async function onRequest({ request, env }) {
     const headers={apikey:dbKey,'Content-Type':'application/json',Prefer:'return=minimal'};
     // Legacy service_role is a JWT; modern sb_secret keys authenticate via apikey only.
     if(!dbKey.startsWith('sb_secret_'))headers.Authorization='Bearer '+dbKey;
+    const limit=await applyLeadRateLimit(request,env,apiUrl,headers,email);
+    if(!limit.allowed){
+      if(limit.unavailable)return apiReply({success:false,error:'Registration protection is temporarily unavailable. Please retry later.'},503);
+      return new Response(JSON.stringify({success:false,error:'Too many registration attempts. Please try again later.'}),{
+        status:429,
+        headers:{'Content-Type':'application/json','Cache-Control':'no-store','Retry-After':'3600'}
+      });
+    }
     const res=await fetch(apiUrl.replace(/\/$/,'')+'/rest/v1/early_access_leads',{
       method:'POST',headers,
       body:JSON.stringify({work_email:email,company_name:company,company_size:size,target_countries:countries}),
