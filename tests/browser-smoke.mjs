@@ -7,11 +7,17 @@ try {
   const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:4173/',{waitUntil:'networkidle'});
+  // Gate 6: Verify mandatory warnings and non-clearance marketing actually render.
+  await page.getByText('Screen cross-border mobility risks before making HR decisions.').waitFor();
+  await page.getByText('Screening only — not legal advice',{exact:false}).waitFor();
+  await page.getByText('7 Modeled Destinations · Rules Require Verification').waitFor();
+  assert.equal(await page.getByText('Verified 2026 Global Tax & Visa Rules',{exact:false}).count(),0);
   await page.getByRole('button',{name:'Add Employee',exact:true}).waitFor();
   await page.getByText('Screening assumptions matrix:',{exact:false}).click();
   await page.getByRole('button',{name:'Home: Canada',exact:true}).click();
   await page.getByText('Rolling travel history required',{exact:true}).waitFor();
   await page.getByRole('button',{name:'Add Employee',exact:true}).click();
+  await page.getByText('Pre-launch evaluation: use fictional employee records only.',{exact:false}).waitFor();
   const form=page.locator('form').filter({has:page.getByPlaceholder('Employee full name')});
   await form.getByPlaceholder('Employee full name').fill('Regression Thailand');
   await form.locator('select').filter({has:page.locator('option[value="Thailand"]')}).selectOption('Thailand');
