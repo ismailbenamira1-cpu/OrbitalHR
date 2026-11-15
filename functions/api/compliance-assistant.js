@@ -13,13 +13,13 @@ class AIError extends Error {
   }
 }
 
-async function timedFetch(provider, url, options, ms = 40000) {
+async function timedFetch(provider, url, options, ms = 55000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (e) {
-    throw new AIError(provider, 0, e.name === 'AbortError' ? 'request timed out' : e.message);
+    throw new AIError(provider, 0, controller.signal.aborted || e?.name === 'AbortError' ? 'TIMEOUT' : 'CONNECTION_FAILED');
   } finally {
     clearTimeout(timer);
   }
@@ -70,7 +70,7 @@ async function callClaude(env, { system, messages, maxTokens, temperature }) {
   throw lastErr;
 }
 
-async function callGemini(env, { system, messages, maxTokens, temperature }) {
+async function callGemini(env, { system, messages, maxTokens }) {
   const key = env.GEMINI_API_KEY || env.API_KEY;
   // New Gemini API projects may not have access to legacy 2.5 models.
   // Prefer current Flash. A configured model may be tried first, then supported backups.
@@ -91,7 +91,7 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: system }] },
             contents,
-            generationConfig: { temperature, maxOutputTokens: maxTokens },
+            generationConfig: { maxOutputTokens: maxTokens, thinkingConfig: { thinkingLevel: model === 'gemini-3.5-flash-lite' ? 'MINIMAL' : 'LOW' } },
           }),
         }
       );
@@ -115,7 +115,7 @@ async function callGemini(env, { system, messages, maxTokens, temperature }) {
       break;
     }
   }
-  console.error('Gemini API error status', lastErr?.status);
+  console.error('Gemini request failed', {status:lastErr?.status || 0, category:lastErr?.detail === 'TIMEOUT' ? 'timeout' : lastErr?.detail === 'CONNECTION_FAILED' ? 'connection' : 'upstream', modelCount:models.length});
   throw lastErr || new AIError('gemini', 0, 'no supported model responded');
 }
 
@@ -138,6 +138,8 @@ function friendlyError(err) {
   if (/credit balance|billing|quota|insufficient/i.test(d)) return `${who} account has no credit or quota left. Add credit or billing, then try again.`;
   if (err.status === 404 || /not found|no longer available|not supported/i.test(d)) return `${who} model name was not found. Set CLAUDE_MODEL or GEMINI_MODEL to a current model. (${d})`;
   if (err.status === 429 || err.status === 529) return `${who} is rate-limited or busy. Please try again in a minute.`;
+  if (err.status === 0 && d === 'TIMEOUT') return `${who} did not answer before the server timeout. The request may still have been processed upstream. Try again later; if recurring, review Cloudflare Functions invocation logs.`;
+  if (err.status === 0 && d === 'CONNECTION_FAILED') return `${who} could not be reached by the Cloudflare server. Check Cloudflare Functions logs for outbound fetch failures and confirm the provider endpoint is reachable.`;
   return `${who} is temporarily unavailable (${err.status || 'network'}). Please try again later or contact support.`;
 }
 
