@@ -28,6 +28,8 @@
 - **Outstanding before identifiable employee onboarding:** verify legal operator, obtain any required business/customer agreement/consent, publish approved accurate Privacy Notice and Terms, arrange pragmatic verified data deletion/retention response, test breach procedure, validate Supabase/Cloudflare/AI provider data processing and transfers, and complete scoped legal/security review. **Drafting ≠ operational compliance.**
 - **Gate 5 status:** DRAFT DOCUMENTATION COMPLETE; LEGAL/OPERATIONAL GATE OPEN. Public launch approval remains withheld pending checklist requirements.
 
+- **Legal website pages staged, not published:** [Gate 5 website staging guide](GATE5_WEBSITE_LEGAL_PAGE_STAGING.md). The live footer indicates Privacy/Terms are in preparation and provides the privacy email. Public policy routes, final review and acceptance flow are not active.
+
 ## Engineering controls implemented
 
 - Production Vite build, Playwright smoke test, 37 Node regression tests, and Cloudflare Functions build run in GitHub Actions (consult latest run before claiming green).
