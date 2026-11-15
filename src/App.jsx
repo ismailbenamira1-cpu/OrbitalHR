@@ -224,7 +224,7 @@ function CopilotPanel({ session, onSignIn }) {
           ? data.answer
           : data.error || 'Something went wrong.'
         : `Server replied ${res.status} (${res.headers.get('content-type') || 'no content type'}) instead of JSON: ${raw.slice(0, 120) || '(empty body)'}`;
-      setMessages((m) => [...m, { role: 'assistant', content: data?.success && data?.mode === 'structured-screening' ? `Structured screening overview (AI response was incomplete).\n\n${answer}` : answer }]);
+      setMessages((m) => [...m, { role: 'assistant', content: data?.success && data?.mode === 'offline-screening' ? `${data.notice}\n\n${answer}` : data?.success && data?.mode === 'structured-screening' ? `Structured screening overview (AI response was incomplete).\n\n${answer}` : answer }]);
     } catch (err) {
       setMessages((m) => [...m, { role: 'assistant', content: `Network problem: ${err.message}` }]);
     } finally {
@@ -563,7 +563,7 @@ const generateAiBrief = async (employee) => {
     }
 
     if (data.success && (data.summary || data.brief)) {
-      setAiSummaries(prev => ({ ...prev, [employee.id]: data.mode === 'structured-screening' ? `Structured screening brief (AI response was incomplete).\n\n${data.summary || data.brief}` : data.summary || data.brief }));
+      setAiSummaries(prev => ({ ...prev, [employee.id]: data.mode === 'offline-screening' ? `${data.notice}\n\n${data.summary || data.brief}` : data.mode === 'structured-screening' ? `Structured screening brief (AI response was incomplete).\n\n${data.summary || data.brief}` : data.summary || data.brief }));
     } else {
       alert("AI Brief Error: " + (data.error || "No summary returned"));
     }
