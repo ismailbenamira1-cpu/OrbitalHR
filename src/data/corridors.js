@@ -17,7 +17,7 @@ const HOST = {
   },
   'United Kingdom': {
     visa: { limit: 180, conf: 'verified', short: 'Up to 6 months per visit; ETA required; work for a foreign employer must stay incidental', pathway: 'Standard Visitor (incidental remote work) or Global Business Mobility routes', milestones: [] },
-    tax: { T: 183, conf: 'verified', short: 'Statutory Residence Test: 183+ days is automatic residency; for new arrivers 46+ days with 4 ties, 91+ with 3 ties, 121+ with 2 ties can also create residency', milestones: [{ day: 46, lead: 0, label: 'UK SRT: ties test can make this person resident from 46 days' }] },
+    tax: { T: 183, alertT: 183, conf: 'verified', peConf: 'secondary', short: 'Statutory Residence Test: 183+ days is automatic residency; for new arrivers 46+ days with 4 ties, 91+ with 3 ties, 121+ with 2 ties can also create residency', milestones: [{ day: 46, lead: 0, label: 'UK SRT: ties test can make this person resident from 46 days' }] },
     peBase: 'High', payroll: 130, entity: 2800,
   },
   Mexico: {
@@ -114,7 +114,8 @@ export function pillarCell(home, host, pillar, { role = 'Individual Contributor'
     if (h.tax.prompt) detailParts.push(`Review prompt: ${h.tax.prompt}`);
     if (h.tax.src) detailParts.push(`Sources: ${h.tax.src}`);
     detailParts.push(HOME_TAX[home]);
-    return { ...base, ...bounds(limit), rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: h.tax.milestones || [] };
+    // Tax-residency milestones belong to the residency track, not the PE policy limit.
+    return { ...base, ...bounds(limit), rule: h.tax.short, detail: detailParts.join(' '), conf: h.tax.peConf || h.tax.conf, milestones: [] };
   }
   const s = SS[home][host];
   if (s.covered) {
@@ -149,7 +150,7 @@ export function evaluatePillars(emp) {
 
 export function hostSummary(host) {
   const h = HOST[host] || HOST[HOSTS[0]];
-  return { visaLimitDays: h.visa.limit, visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
+  return { visaLimitDays: h.visa.limit, taxResidencyMilestones: h.tax.milestones || [], visaInitialLimitDays: h.visa.initialLimit ?? h.visa.limit, visaExtendedLimitDays: h.visa.extendedLimit ?? h.visa.limit, visaExtensionRequiredAtDays: h.visa.extensionRequiredAt ?? null, visaExtensionDiscretionary: h.visa.extensionDiscretionary ?? false, visaEntryAssigned: h.visa.entryAssigned ?? false, visaRuleShort: h.visa.short, visaPathway: h.visa.pathway, taxResidencyDays: h.tax.T, peAlertBaseDays: h.tax.alertT ?? h.tax.T, taxRuleShort: h.tax.short, taxPrompt: h.tax.prompt, sources: h.tax.src, peBaseRisk: h.peBase, localPayrollMonthlyUSD: h.payroll, entitySetupOneTimeUSD: h.entity, lastVerified: LAST_VERIFIED };
 }
 
 export const worstLevel = (ps) => PILLARS.map((p) => ps[p].level).reduce((a, b) => (rank(b) > rank(a) ? b : a), 'OK');
