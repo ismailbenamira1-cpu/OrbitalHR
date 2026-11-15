@@ -10,7 +10,9 @@ export async function onRequest({ request, env }) {
     if (auth.error) return auth.error;
     const key = env.GEMINI_API_KEY || env.API_KEY;
     if (!key) return apiReply({success:false,stage:'generation',category:'provider-config'},503);
-    const model = env.GEMINI_MODEL || 'gemini-3.8-flash';
+    // Explicit allowlist: test current production or an alternative; never proxy arbitrary model paths.
+    const choice = new URL(request.url).searchParams.get('model');
+    const model = choice === 'gemini-3.5-flash-lite' ? 'gemini-3.5-flash-lite' : (env.GEMINI_MODEL || 'gemini-3.8-flash');
     const start = Date.now();
     const controller = new AbortController();
     const timer = setTimeout(()=>controller.abort(),12000);
@@ -20,7 +22,7 @@ export async function onRequest({ request, env }) {
         headers:{'Content-Type':'application/json','x-goog-api-key':key},
         body:JSON.stringify({
           contents:[{role:'user',parts:[{text:'Reply with the single word READY.'}]}],
-          generationConfig:{maxOutputTokens:48,thinkingConfig:{thinkingLevel:'low'}}
+          generationConfig:{maxOutputTokens:48,thinkingConfig:{thinkingLevel:model==='gemini-3.5-flash-lite'?'minimal':'low'}}
         }),
         signal:controller.signal
       });
