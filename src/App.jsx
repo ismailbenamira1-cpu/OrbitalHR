@@ -186,6 +186,7 @@ function CopilotPanel({ session, onSignIn }) {
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [diagnosing, setDiagnosing] = useState(false);
+  const [testingGeneration, setTestingGeneration] = useState(false);
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -253,6 +254,26 @@ function CopilotPanel({ session, onSignIn }) {
     }finally{setDiagnosing(false);}
   }
 
+  async function checkAiGeneration() {
+    if (busy || diagnosing || testingGeneration) return;
+    if(!session){onSignIn();return;}
+    setTestingGeneration(true);
+    try{
+      const {data: refreshed,error: sessionError}=await supabase.auth.getSession();
+      if(sessionError || !refreshed.session?.access_token)throw new Error('Sign in again.');
+      const response=await fetch('/api/ai-diagnostic',{
+        method:'POST',headers:{Authorization:`Bearer ${refreshed.session.access_token}`}
+      });
+      const result=await response.json();
+      const description=result.success
+        ? `Minimal Gemini generation succeeded: model=${result.model}, HTTP ${result.httpStatus}, elapsed=${result.elapsedMs} ms, outputChars=${result.outputChars}, finishReason=${result.finishReason}. No employee data was sent.`
+        : `Minimal Gemini generation failed: stage=${result.stage||'unknown'}, category=${result.category||result.error||'unknown'}, HTTP=${result.httpStatus??response.status}, elapsed=${result.elapsedMs??'unknown'} ms. No employee data was sent.`;
+      setMessages(m=>[...m,{role:'assistant',content:description}]);
+    }catch(err){
+      setMessages(m=>[...m,{role:'assistant',content:'Minimal Gemini generation diagnostic failed: '+err.message}]);
+    }finally{setTestingGeneration(false);}
+  }
+
   const starters = ['Who is closest to a visa limit?', 'Who has the highest PE risk?', 'Who needs individual tax review?', 'Who is eligible for payroll feasibility review?'];
 
   if (!open) {
@@ -307,6 +328,10 @@ function CopilotPanel({ session, onSignIn }) {
         <button type="button" onClick={checkAiConnection} disabled={diagnosing || busy} className="text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50">
           {diagnosing ? 'Checking Gemini connection…' : 'Test Gemini connection (no AI generation)'}
         </button>
+        <button type="button" onClick={checkAiGeneration} disabled={testingGeneration || diagnosing || busy} className="ml-3 text-xs font-medium text-indigo-700 hover:underline disabled:opacity-50">
+          {testingGeneration ? 'Testing minimal Gemini generation…' : 'Test Gemini generation (one small AI request)'}
+        </button>
+        <p className="mt-1 text-[10px] text-slate-500">Generation test uses a fixed one-word prompt, sends no employee data, and counts as one AI request.</p>
       </div>
       <div className="border-t border-slate-200 p-2">
         <div className="flex gap-2">
