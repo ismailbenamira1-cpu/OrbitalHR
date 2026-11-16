@@ -4,7 +4,7 @@ import {createAllocatedCheckout} from './allocated-checkout.js';
 import {BILLING_PRICES} from './billing-prices.js';
 const STAGING='https://clijflnmtyqjexocbjqq.supabase.co';
 async function rpc(config,name,args,fetcher) {
- const r=await fetcher(config.url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:config.service,Authorization:'Bearer '+config.service,'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(7500)});
+ const r=await fetcher(config.url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:config.service,'Content-Type':'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(7500)});
  if(!r.ok) throw Error('Database request failed');
  const value=await r.json();
  return Array.isArray(value)?value[0]:value;
