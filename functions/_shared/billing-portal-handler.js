@@ -7,7 +7,7 @@ export async function handleBillingPortal(request,env,fetcher=fetch){
  if(!config||config.url!==STAGING||env.BILLING_PORTAL_TEST_ENABLED!=='true'||!/^sk_test_/.test(key||'')||!/^bpc_[A-Za-z0-9]+$/.test(portal||''))return apiReply({error:'Billing portal unavailable'},503);
  const user=await authenticatePreview(request,config,fetcher);
  if(!user)return apiReply({error:'Verified sign-in required'},401);
- const headers={apikey:config.service,Authorization:'Bearer '+config.service};
+ const headers={apikey:config.service};
  const r=await fetcher(STAGING+'/rest/v1/billing_accounts?user_id=eq.'+encodeURIComponent(user)+'&select=stripe_customer_id,stripe_subscription_id',{headers,signal:AbortSignal.timeout(7500)});
  if(!r.ok)throw Error('Account lookup failed');
  const rows=await r.json(),a=rows?.[0];
