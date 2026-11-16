@@ -7,7 +7,7 @@
 
 **Prepared:** 15 November 2026. **Stage:** Drafting complete / legal-operational acceptance outstanding.
 **Founder privacy contact:** ismailbenamira1@gmail.com
-**Legal operator:** [CURRENT LEGAL OPERATOR IDENTITY, SERVICE ADDRESS AND BUSINESS STATUS TO CONFIRM]. Future Ontario incorporation is not yet complete.
+**Legal operator:** Ismail Benamira (individual founder, confirmed 16 November 2026). **Service/contact address and business registration requirements: to confirm.** No Ontario corporation has been established.
 
 ## Drafted package (not yet published or legally approved)
 1. [Privacy Notice](GATE5_PRIVACY_NOTICE_DRAFT.md) — data categories, purpose, user rights, service providers, security and disclosure limits.
