@@ -1,6 +1,6 @@
 # OrbitalHR — Terms of Service (MVP DRAFT — NOT EFFECTIVE)
 
-**Drafted:** 15 November 2026. **Status:** Internal review; not an accepted or published agreement. **Operator:** [CURRENT LEGAL OPERATOR'S FULL NAME AND SERVICE ADDRESS]; OrbitalHR is the product name, not a registered corporation. A future Ontario company must not be identified as the current contracting party. **Contact:** ismailbenamira1@gmail.com. **Effective date:** [AFTER REVIEW].
+**Drafted:** 15 November 2026. **Status:** Internal review; not an accepted or published agreement. **Operator:** Ismail Benamira (individual founder); **service/contact address: [TO CONFIRM]**. OrbitalHR is the product name, not a registered corporation. A future Ontario company must not be identified as the current contracting party. **Contact:** ismailbenamira1@gmail.com. **Effective date:** [AFTER REVIEW].
 
 ## 1. Acceptance and eligibility
 These proposed Terms govern access to OrbitalHR's international HR mobility compliance-screening application by authorized business users aged 18 or over and acting with authority on behalf of their employer or customer organization. A binding agreement requires a clear acceptance process and the actual identified contracting party. The public website's availability alone does not create acceptance of this draft.
