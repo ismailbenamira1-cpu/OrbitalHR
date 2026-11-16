@@ -14,7 +14,7 @@ This is the authoritative *operational* list of Gate 5 release blockers. Drafts 
 
 | ID | Required release action | Evidence that closes it | Present evidence / decision |
 |---|---|---|---|
-| G5-01 | Identify actual present legal operator (individual or registered legal entity), correct service/contact address, jurisdiction and contact route | Founder-confirmed identity and address, registration documents if any; consistent approved policies | **OPEN**; no incorporated Ontario company should be assumed |
+| G5-01 | Identify actual present legal operator (individual or registered legal entity), correct service/contact address, jurisdiction and contact route | Founder-confirmed identity and address, registration documents if any; consistent approved policies | **PARTIALLY CLOSED** — Ismail Benamira confirmed individual operator; service/contact address and registration position still open |
 | G5-02 | Choose free/demo vs. paid pilot terms, customer eligibility and actual current account model | Signed-off terms describing billing, operator, single-user roster and restricted scope | **OPEN** |
 | G5-03 | Approve current Privacy Notice and Terms; ensure truthful data categories, regions, contact details, rights, no unimplemented 30-day promise | Final approved version, date, reviewer and links to accessible live pages | **OPEN**; website has staged, unapproved components |
 | G5-04 | Review DPA/security schedule where applicable to business employee records, and make acceptance/contracting process functional | Signed/agreed DPA when needed; accepted Terms version and audit evidence | **OPEN** |
@@ -29,7 +29,7 @@ This is the authoritative *operational* list of Gate 5 release blockers. Drafts 
 
 ## Fast closure sequence (no unnecessary engineering)
 
-**Business inputs from founder:** actual legal operator name, business/service address and whether incorporated/registered; MVP is no-charge demo, free pilot or paid; intended first customer/worker locations; whether real identifiable employee uploads are to be enabled immediately. Do not include private home address in public GitHub or commit legal PII before the user approves it.
+**Business inputs from founder:** operator confirmed as Ismail Benamira, acting individually (16 November 2026); business/service address and registration requirements still to determine; MVP is no-charge demo, free pilot or paid; intended first customer/worker locations; whether real identifiable employee uploads are to be enabled immediately. Do not include private home address in public GitHub or commit legal PII before the user approves it.
 
 **Vendor proof:** capture applicable account dashboard/terms in an access-restricted location; verify actual live Cloudflare AI provider secret without exposing it; confirm processing and backup language. Only update the public notice from verified facts.
 
@@ -49,4 +49,4 @@ This is the authoritative *operational* list of Gate 5 release blockers. Drafts 
 - OPC fair information principles: https://www.priv.gc.ca/en/privacy-topics/privacy-laws-in-canada/the-personal-information-protection-and-electronic-documents-act-pipeda/p_principle/
 - CRTC CASL FAQs: https://crtc.gc.ca/eng/com500/faq500.htm
 
-**Sign-off:** legal operator [UNCONFIRMED] · Counsel/privacy review [PENDING] · Operational approver [PENDING] · Release decision [NO-GO for identifiable roster].
+**Sign-off:** legal operator Ismail Benamira (individual founder; address pending) · Counsel/privacy review [PENDING] · Operational approver [PENDING] · Release decision [NO-GO for identifiable roster].
