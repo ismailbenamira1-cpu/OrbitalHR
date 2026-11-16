@@ -2,6 +2,7 @@
 **Prepared:** 15 November 2026. **Owner:** Founder and initial Privacy Officer, ismailbenamira1@gmail.com.
 
 ## Scope decisions made
+- Commercial model approved 16 November 2026: 10-day free trial without a payment method, no automatic billing or paid conversion; affirmative paid subscription purchase required. Pricing, trial timing, expiry, data handling and implementation remain open.
 - Intended company incorporation: Ontario, Canada, **not yet incorporated**.
 - Founder serves as initial privacy contact.
 - MVP currently has per-user, owner-scoped employee rosters and optional Gemini AI screening. **No multi-user company tenancy** is live.
@@ -28,7 +29,7 @@
 ## Publication and contract prerequisites (not drafts)
 - [ ] Establish actual operator legal name, operating/service address and business-registration posture; update every contract/policy consistently.
 - [ ] Confirm the founder's email inbox is monitored and secure (MFA, account recovery and access).
-- [ ] Confirm customer model and billing status, then review Terms liability, disclaimers, cancellation and jurisdiction clauses with qualified counsel.
+- [ ] Confirm remaining commercial details and verify billing/trial implementation (Option A approved), then review Terms liability, disclaimers, cancellation and jurisdiction clauses with qualified counsel.
 - [ ] Verify Supabase/Cloudflare/actual AI provider data terms, processing locations, training/retention, backup intervals, subprocessor list and transfer safeguards; complete provider register and DPA.
 - [ ] Establish a defensible retention/deletion process for current MVP personal information (rosters, leads, hashed anti-abuse counters, auth records and privacy requests). Automation may be postponed, but requested deletion must be handled and promises must match actual capability.
 - [ ] Test privacy-request intake, identity verification, access/correction/deletion, breach escalation, notification triage and response records.
