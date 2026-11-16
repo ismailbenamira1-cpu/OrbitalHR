@@ -21,7 +21,7 @@ export async function activateTrial(config, userId, fetcher = fetch) {
   const base = config.url + '/rest/v1/billing_accounts';
   const insert = await fetcher(base + '?on_conflict=user_id', { method:'POST', headers:{...headers, Prefer:'resolution=ignore-duplicates,return=minimal'}, body:JSON.stringify({user_id:userId}), signal:AbortSignal.timeout(7500) });
   if (!insert.ok) throw Error('activation failed');
-  const res = await fetcher(base + '?user_id=eq.' + encodeURIComponent(userId) + '&select=trial_started_at,trial_ends_at,subscription_status,paid_through', {headers, signal:AbortSignal.timeout(7500)});
+  const res = await fetcher(base + '?user_id=eq.' + encodeURIComponent(userId) + '&select=trial_started_at,trial_ends_at,subscription_status,paid_through,billing_hold', {headers, signal:AbortSignal.timeout(7500)});
   if (!res.ok) throw Error('lookup failed');
   const rows = await res.json();
   if (!Array.isArray(rows) || rows.length !== 1) throw Error('account missing');
