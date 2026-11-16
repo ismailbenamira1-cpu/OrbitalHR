@@ -1,0 +1,5 @@
+# Staging maintenance deployment — not yet deployed
+Separate Cloudflare Worker, no HTTP handler, 15-minute UTC cron. Do not deploy to production.
+Configure STRIPE_SECRET_KEY (test only) and BILLING_STAGING_SERVICE_ROLE_KEY as Worker secrets, never VITE variables. From repository root use the installed Wrangler CLI with --config workers/billing-maintenance/wrangler.toml; verify CLI help before deploying. Verify scheduled logs and alert on failed runs. Do not enable checkout for real customers.
+Notification template is implemented but no email transport or delivery evidence exists. Do not populate notice_sent_at merely because a template was generated or an email queued. Select a transactional provider and verified sender, use idempotent delivery and authenticated delivery events. Test with synthetic addresses only.
+The cron does not guarantee prevention of a wrong renewal: Stripe-side renewal guard and a documented minimum notice interval remain blockers. Accepted/bound abandoned checkouts require Stripe reconciliation. No live payment or production deployment authorized.
