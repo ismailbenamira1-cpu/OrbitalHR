@@ -4,7 +4,7 @@
 ## Parties and precedence
 This Data Processing Agreement (“DPA”) is proposed between:
 - **Customer:** [LEGAL CUSTOMER ENTITY NAME AND ADDRESS].
-- **Service provider:** Ismail Benamira, acting as an individual founder, **address: [TO CONFIRM]**, offering the OrbitalHR product (the planned Canadian company is not yet incorporated). **Privacy inquiries contact:** ismailbenamira1@gmail.com.
+- **Service provider:** Ismail Benamira, acting as an individual founder, **correspondence address: 309 Richmond Rd, Ottawa, ON K1Z 6X6, Canada (founder-supplied, receipt not verified)**, offering the OrbitalHR product (the planned Canadian company is not yet incorporated). **Privacy inquiries contact:** ismailbenamira1@gmail.com.
 
 The parties' final commercial agreement and applicable privacy laws govern where this document is silent. This draft must not be treated as an executed contract.
 
