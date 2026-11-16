@@ -9,6 +9,8 @@
 **Founder privacy contact:** ismailbenamira1@gmail.com
 **Legal operator:** Ismail Benamira (individual founder, confirmed 16 November 2026). **Founder-supplied correspondence address: 309 Richmond Rd, Ottawa, ON K1Z 6X6, Canada (use/receipt not verified). Business registration requirements remain to confirm.** No Ontario corporation has been established.
 
+**Commercial model decision (16 November 2026):** Founder intends a **10-calendar-day free trial followed by a paid subscription**. The current app has no verified billing, trial-day counter or expiry enforcement. Pricing, subscription authorization, cancellation and post-trial access/data treatment are still to be defined; this is not yet a live offer.
+
 ## Drafted package (not yet published or legally approved)
 1. [Privacy Notice](GATE5_PRIVACY_NOTICE_DRAFT.md) — data categories, purpose, user rights, service providers, security and disclosure limits.
 2. [Customer Data Processing Agreement](GATE5_CUSTOMER_DPA_DRAFT.md) — customer instructions, confidentiality, security, cross-border processing, incident/rights assistance, vendor schedule, return/deletion terms to negotiate.
