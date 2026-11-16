@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHmac,webcrypto} from 'node:crypto';
+import {verifyStripeEvent} from '../functions/_shared/stripe-webhook-verify.js';
+if(!globalThis.crypto) globalThis.crypto=webcrypto;
+const secret='whsec_fixture', t=1794787200, now=t*1000;
+const raw=new TextEncoder().encode(JSON.stringify({id:'evt_fixture',type:'invoice.paid',livemode:false}));
+const sign=(body,time=t)=>'t='+time+',v1='+createHmac('sha256',secret).update(time+'.').update(body).digest('hex');
+test('valid signature',async()=>assert.equal((await verifyStripeEvent(raw,sign(raw),secret,now)).id,'evt_fixture'));
+test('tampered payload',async()=>await assert.rejects(verifyStripeEvent(new TextEncoder().encode('{}'),sign(raw),secret,now)));
+test('expired signature',async()=>await assert.rejects(verifyStripeEvent(raw,sign(raw),secret,now+301000)));
+test('live event rejected even with valid signature',async()=>{const live=new TextEncoder().encode(JSON.stringify({id:'evt_live',type:'invoice.paid',livemode:true}));await assert.rejects(verifyStripeEvent(live,sign(live),secret,now));});
