@@ -7,7 +7,7 @@
 
 **Prepared:** 15 November 2026. **Stage:** Drafting complete / legal-operational acceptance outstanding.
 **Founder privacy contact:** ismailbenamira1@gmail.com
-**Legal operator:** Ismail Benamira (individual founder, confirmed 16 November 2026). **Service/contact address and business registration requirements: to confirm.** No Ontario corporation has been established.
+**Legal operator:** Ismail Benamira (individual founder, confirmed 16 November 2026). **Founder-supplied correspondence address: 309 Richmond Rd, Ottawa, ON K1Z 6X6, Canada (use/receipt not verified). Business registration requirements remain to confirm.** No Ontario corporation has been established.
 
 ## Drafted package (not yet published or legally approved)
 1. [Privacy Notice](GATE5_PRIVACY_NOTICE_DRAFT.md) — data categories, purpose, user rights, service providers, security and disclosure limits.
@@ -45,7 +45,7 @@
 - Do not promise any automatic organization-wide deletion or fixed backup expiration until implemented and verified.
 
 ## Minimum sign-off before real customer identifiable employees
-- [ ] Identify present legal operator and business/contact address. Verify business registration requirements; do not describe OrbitalHR as incorporated.
+- [ ] Operator name and correspondence address supplied; verify authority to use/receive correspondence at the address, actual place of business and business registration requirements. Do not describe OrbitalHR as incorporated.
 - [ ] Counsel reviews applicable Canadian/foreign privacy and data processing obligations, proposed Terms and DPA for intended client jurisdictions.
 - [ ] Establish an actually functioning privacy-request and incident-response workflow, including verification, records, escalation and required notices.
 - [ ] Confirm current service provider contracts, AI API processing, data retention/training terms, transfer locations, backup windows and subprocessors.
