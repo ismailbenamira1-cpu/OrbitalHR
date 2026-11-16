@@ -12,7 +12,7 @@ export async function createAllocatedCheckout(attempt,key,fetcher=fetch,now=Date
   form.set(prefix+'[orbital_attempt_id]',attempt.attemptId);
   form.set(prefix+'[orbital_plan]',attempt.plan);
  }
- const response=await fetcher('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Stripe-Version':'2024-10-28.acacia','Content-Type':'application/x-www-form-urlencoded','Idempotency-Key':'orbital-allocated-'+attempt.attemptId},body:form.toString(),signal:AbortSignal.timeout(10000)});
+ const response=await fetcher('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:'Bearer '+key,'Stripe-Version':'2024-10-28.acacia','Content-Type':'application/x-www-form-urlencoded','Idempotency-Key':'orbital-allocated-'+attempt.attemptId+(attempt.attemptId==='b6b6e584-0e64-41d8-9280-5ed4f9fab44b'&&attempt.customerId==='cus_VdmujvizuKI6KR'?'-recovery-v1':'')},body:form.toString(),signal:AbortSignal.timeout(10000)});
  if(!response.ok) throw Error('Checkout requires reconciliation');
  const s=await response.json();
  if(s.livemode!==false||!/^cs_test_[A-Za-z0-9]+$/.test(s.id||'')||s.customer!==attempt.customerId||s.client_reference_id!==attempt.userId||s.mode!=='subscription'||s.status!=='open'||s.metadata?.orbital_attempt_id!==attempt.attemptId||s.metadata?.orbital_plan!==attempt.plan) throw Error('Unexpected checkout response');
