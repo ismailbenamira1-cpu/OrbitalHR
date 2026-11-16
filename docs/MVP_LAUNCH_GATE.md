@@ -1,5 +1,11 @@
 # OrbitalHR — MVP launch gate (15 November 2026)
 
+## Gate 5 final release sign-off — 16 November 2026
+
+- [Evidence-based Gate 5 launch sign-off ledger](GATE5_LAUNCH_SIGNOFF_LEDGER.md) is the authoritative checklist for current legal operator identity, approved policies, Terms/DPA acceptance, vendor/AI processing, privacy-request and retention tests, incident drill, CASL messaging and final reviewer/operator sign-off.
+- **Gate 5 remains OPEN for identifiable employee data.** The legal draft package is finished, but operational and operator approvals are not. No database mutation or legal publication was performed in creating the ledger.
+
+
 **Chosen release: public MVP for compliance screening and operational risk alerts only. Public launch is NOT YET APPROVED.** This scope deliberately excludes verified advisory, automated legal determinations and claims of approval for all 42 cells. The matrix can be shown only as clearly unverified screening assumptions, with prominent limits, mandatory adviser review for consequential decisions, and a documented restricted release assessment. Professional review is required before upgrading a specific corridor to verified advice.
 
 ## Gate progress update — 15 November 2026
