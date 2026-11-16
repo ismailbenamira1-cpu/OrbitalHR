@@ -2,6 +2,7 @@
 **Prepared:** 15 November 2026. **Owner:** Founder and initial Privacy Officer, ismailbenamira1@gmail.com.
 
 ## Scope decisions made
+- Automated online payment and paid-access activation required for initial MVP (founder decision 16 November 2026); no manual-invoice-only launch. Provider selection, merchant eligibility, pricing, renewal consent and technical verification pending.
 - Commercial model approved 16 November 2026: 10-day free trial without a payment method, no automatic billing or paid conversion; affirmative paid subscription purchase required. Pricing, trial timing, expiry, data handling and implementation remain open.
 - Intended company incorporation: Ontario, Canada, **not yet incorporated**.
 - Founder serves as initial privacy contact.
