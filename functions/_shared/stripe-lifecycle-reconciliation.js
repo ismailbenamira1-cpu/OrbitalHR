@@ -4,7 +4,7 @@ const valid=(x,p)=>typeof x==='string'&&new RegExp('^'+p+'_[A-Za-z0-9]+$').test(
 export const lifecycleTypes=['customer.subscription.updated','customer.subscription.deleted','invoice.payment_failed','charge.refunded','charge.dispute.created'];
 export async function reconcileLifecycle(event,env,fetcher=fetch){
  if(env.BILLING_STAGING_SUPABASE_URL!==STAGING||!/^sk_test_/.test(env.STRIPE_SECRET_KEY||'')||!env.BILLING_STAGING_SERVICE_ROLE_KEY||event.livemode!==false||!lifecycleTypes.includes(event.type))throw Error('Invalid lifecycle context');
- const headers={apikey:env.BILLING_STAGING_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.BILLING_STAGING_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
+ const headers={apikey:env.BILLING_STAGING_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
  async function get(url,options){const r=await fetcher(url,{...options,signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Upstream unavailable');return r.json();}
  const stripe=path=>get('https://api.stripe.com/v1/'+path,{headers:{Authorization:'Bearer '+env.STRIPE_SECRET_KEY,'Stripe-Version':'2024-10-28.acacia'}});
  const obj=event.data?.object;
