@@ -37,6 +37,15 @@ export async function authorizeAi(request, env) {
   } catch {
     return { error: apiReply({ success: false, error: 'Authentication service temporarily unavailable.' }, 503) };
   }
+  // Staging billing is fail-closed; production authorization remains unchanged.
+  if (url.replace(/\/$/,'') === 'https://clijflnmtyqjexocbjqq.supabase.co' || env.BILLING_ENFORCEMENT_TEST_ENABLED === 'true') {
+    if (url.replace(/\/$/,'') !== 'https://clijflnmtyqjexocbjqq.supabase.co' || env.BILLING_ENFORCEMENT_TEST_ENABLED !== 'true' || !user.email_confirmed_at) return {error:apiReply({success:false,error:'Billing preview unavailable.'},503)};
+    try {
+      const response=await fetch(url.replace(/\/$/,'')+'/rest/v1/rpc/has_billing_entitlement',{method:'POST',headers:{apikey:key,Authorization:bearer,'Content-Type':'application/json'},body:'{}',signal:AbortSignal.timeout(7500)});
+      if(!response.ok)return {error:apiReply({success:false,error:'Billing verification unavailable.'},503)};
+      if(await response.json()!==true)return {error:apiReply({success:false,error:'An active trial or subscription is required.'},402)};
+    }catch{return {error:apiReply({success:false,error:'Billing verification unavailable.'},503)};}
+  }
   // Atomic per-user daily quota is enforced by a narrowly scoped Supabase RPC.
   try {
     const response = await fetch(url.replace(/\/$/, '') + '/rest/v1/rpc/consume_ai_daily_quota', {
