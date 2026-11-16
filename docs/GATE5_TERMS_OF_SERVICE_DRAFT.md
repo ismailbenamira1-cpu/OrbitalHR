@@ -1,6 +1,6 @@
 # OrbitalHR — Terms of Service (MVP DRAFT — NOT EFFECTIVE)
 
-**Drafted:** 15 November 2026. **Status:** Internal review; not an accepted or published agreement. **Operator:** Ismail Benamira (individual founder); **service/contact address: [TO CONFIRM]**. OrbitalHR is the product name, not a registered corporation. A future Ontario company must not be identified as the current contracting party. **Contact:** ismailbenamira1@gmail.com. **Effective date:** [AFTER REVIEW].
+**Drafted:** 15 November 2026. **Status:** Internal review; not an accepted or published agreement. **Operator:** Ismail Benamira (individual founder); **correspondence address (founder-supplied; not independently verified): 309 Richmond Rd, Ottawa, ON K1Z 6X6, Canada**. OrbitalHR is the product name, not a registered corporation. A future Ontario company must not be identified as the current contracting party. **Contact:** ismailbenamira1@gmail.com. **Effective date:** [AFTER REVIEW].
 
 ## 1. Acceptance and eligibility
 These proposed Terms govern access to OrbitalHR's international HR mobility compliance-screening application by authorized business users aged 18 or over and acting with authority on behalf of their employer or customer organization. A binding agreement requires a clear acceptance process and the actual identified contracting party. The public website's availability alone does not create acceptance of this draft.
@@ -46,7 +46,7 @@ The operator may suspend access proportionately for credible security or materia
 [A CANADIAN LAWYER MUST DRAFT OR REVIEW THE ENFORCEABLE WARRANTY DISCLAIMER, LIABILITY CAP, DAMAGES EXCLUSIONS, INDEMNITY ALLOCATION, CONSUMER/EMPLOYMENT RIGHTS EXCEPTIONS AND ANY INSURANCE REQUIREMENTS]. Nothing in this draft excludes liability that applicable law does not permit to be excluded.
 
 ## 14. Governing law and dispute resolution
-[VERIFY ACTUAL CONTRACTING ENTITY, PLACE OF BUSINESS, CUSTOMER GEOGRAPHIES, GOVERNING LAW, FORUM, NOTICE AND DISPUTE PROCESS]. Ontario is the intended incorporation jurisdiction, not proof that it is already the operator's registered address.
+[VERIFY ACTUAL PLACE OF BUSINESS, CUSTOMER GEOGRAPHIES, GOVERNING LAW, FORUM, NOTICE AND DISPUTE PROCESS]. The founder supplied an Ottawa correspondence address; it does not establish an Ontario place of business or registered company.
 
 ## 15. Updates and notices
 Material changes to accepted terms should be notified as applicable, and customers should have access to the current effective version. Notices and privacy requests may be sent to ismailbenamira1@gmail.com pending the establishment of a business-domain address.
