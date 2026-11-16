@@ -25,6 +25,7 @@ export async function handleCheckout(request,env,fetcher=fetch) {
  if(a?.plan==='waitlist') return apiReply({error:'Founding offers temporarily reserved'},409);
  if(!a||a.plan!==body.plan) return apiReply({error:'Offer changed; review before accepting',plan:a?.plan},409);
  if(a.state!=='reserved'||a.stripe_session_id||Date.now()-Date.parse(a.created_at)>=20*3600000) return apiReply({error:'Existing checkout requires reconciliation'},409);
+ if(await rpc(config,'record_billing_acceptance',{p_user:user,p_attempt:a.attempt_id,p_plan:a.plan,p_terms:body.termsVersion},fetcher)!==true)throw Error('Acceptance not recorded');
  let customer=a.bound_customer_id;
  if(!customer){
  const form=new URLSearchParams({'metadata[orbital_user_id]':user});
