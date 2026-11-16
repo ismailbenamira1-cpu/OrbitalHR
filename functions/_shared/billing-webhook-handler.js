@@ -1,3 +1,4 @@
+import {lifecycleTypes,reconcileLifecycle} from './stripe-lifecycle-reconciliation.js';
 import {verifyStripeEvent} from './stripe-webhook-verify.js';
 import {apiReply} from './security.js';
 import {reconcileStripeInvoice} from './stripe-invoice-reconciliation.js';
@@ -11,6 +12,10 @@ export async function handleBillingWebhook(request,env) {
  const raw=new Uint8Array(size);let offset=0;for(const chunk of chunks){raw.set(chunk,offset);offset+=chunk.byteLength;}
  const event=await verifyStripeEvent(raw,request.headers.get('stripe-signature'),env.STRIPE_WEBHOOK_SECRET);
  if(!event)return apiReply({error:'Invalid signature'},400);
+ if(lifecycleTypes.includes(event.type)) {
+ if(env.BILLING_LIFECYCLE_TEST_ENABLED!=='true')return apiReply({error:'Lifecycle disabled'},503);
+ try{return apiReply({result:await reconcileLifecycle(event,env)});}catch{return apiReply({error:'Lifecycle requires retry'},503);}
+ }
  if(event.type!=='invoice.paid') return apiReply({error:'Event type not supported'},503);
  if(env.BILLING_RECONCILIATION_TEST_ENABLED!=='true') return apiReply({error:'Reconciliation not enabled'},503);
  try {return apiReply({result:await reconcileStripeInvoice(event,env)});} catch {return apiReply({error:'Reconciliation requires retry'},503);}
