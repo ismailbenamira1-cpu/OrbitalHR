@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {reconcilePaidInvoice} from '../functions/_shared/billing-reconciliation.js';
+import {PRICE} from '../functions/_shared/stripe-preview.js';
+const start=1794787200, end=start+30*86400;
+const line={id:'il_fixture',price:{id:PRICE},quantity:1,proration:false,amount:9900,period:{start,end}};
+const fixture={account:{stripe_customer_id:'cus_fixture',stripe_subscription_id:'sub_fixture'},subscription:{id:'sub_fixture',customer:'cus_fixture',livemode:false,status:'active'},invoice:{customer:'cus_fixture',subscription:'sub_fixture',livemode:false,status:'paid',currency:'cad',amount_paid:9900,amount_remaining:0,billing_reason:'subscription_create',lines:{has_more:false,data:[line]}},line,now:start*1000};
+test('settled monthly invoice grants bounded coverage',()=>assert.equal(reconcilePaidInvoice(fixture).paid_through,new Date(end*1000).toISOString()));
+test('unpaid, wrong customer, wrong subscription and live invoices rejected',()=>{for(const patch of [{status:'open'},{customer:'cus_other'},{subscription:'sub_other'},{livemode:true},{amount_paid:0}])assert.throws(()=>reconcilePaidInvoice({...fixture,invoice:{...fixture.invoice,...patch}}));});
+test('wrong price and expired coverage rejected',()=>{assert.throws(()=>reconcilePaidInvoice({...fixture,line:{...line,price:{id:'price_other'}}}));assert.throws(()=>reconcilePaidInvoice({...fixture,now:end*1000}));});
