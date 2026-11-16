@@ -4,7 +4,7 @@ import { billingEntitlement } from './billing-entitlement.js';
 export function previewConfig(env, request) {
   if (env.BILLING_PREVIEW_ENABLED !== 'true' || !env.BILLING_PREVIEW_ORIGIN || new URL(request.url).origin !== env.BILLING_PREVIEW_ORIGIN || !verifySameOrigin(request)) return null;
   const url = env.BILLING_STAGING_SUPABASE_URL;
-  if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url || '') || url === (env.SUPABASE_URL || '').replace(/\/$/,'') || url === (env.VITE_SUPABASE_URL || '').replace(/\/$/,'')) return null;
+  if (url !== 'https://clijflnmtyqjexocbjqq.supabase.co' || env.SUPABASE_URL !== url || env.VITE_SUPABASE_URL !== url) return null;
   if (!env.BILLING_STAGING_ANON_KEY || !env.BILLING_STAGING_SERVICE_ROLE_KEY) return null;
   return { url, anon: env.BILLING_STAGING_ANON_KEY, service: env.BILLING_STAGING_SERVICE_ROLE_KEY };
 }
