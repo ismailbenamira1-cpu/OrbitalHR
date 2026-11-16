@@ -25,18 +25,6 @@ export async function reconcileStripeInvoice(event,env,fetcher=fetch) {
  const result=await json(STAGING+'/rest/v1/rpc/apply_allocated_payment',{method:'POST',headers:dbHeaders,body:JSON.stringify({...args,p_event:event.id})});
  if(!['applied','duplicate','duplicate_invoice'].includes(result))throw Error('Unexpected reconciliation result');
  // Run on duplicate delivery too: payment may have committed before a failed Stripe update.
- if(account.offered_plan==='founding'){
- const filter='user_id=eq.'+encodeURIComponent(account.user_id);
- const paid=await json(STAGING+'/rest/v1/billing_paid_invoices?'+filter+'&price_plan=eq.founding&select=invoice_id,user_id,price_plan&limit=13',{headers:dbHeaders});
- if(!Array.isArray(paid)||paid.length>12)throw Error('Unexpected founding invoice count');
- if(paid.length===12){
- const fresh=await row('billing_accounts',filter);
- const current=await stripe('subscriptions/'+fresh.stripe_subscription_id);
- if(current.cancel_at_period_end!==true){
- if(env.BILLING_TRANSITION_TEST_ENABLED!=='true')throw Error('Price transition disabled');
- await transitionFoundingPrice({account:fresh,paidInvoices:paid,subscription:current},env.STRIPE_SECRET_KEY,fetcher);
- }
- }
- }
+ // The durable transition task is processed by maintenance after notice verification.
  return result;
 }
