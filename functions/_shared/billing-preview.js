@@ -17,7 +17,7 @@ export async function authenticatePreview(request, config, fetcher = fetch) {
   return user.aud === 'authenticated' && user.email_confirmed_at && /^[0-9a-f-]{36}$/i.test(user.id || '') ? user.id : null;
 }
 export async function activateTrial(config, userId, fetcher = fetch) {
-  const headers = { apikey: config.service, Authorization: 'Bearer ' + config.service, 'Content-Type': 'application/json' };
+  const headers = { apikey: config.service, 'Content-Type': 'application/json' };
   const base = config.url + '/rest/v1/billing_accounts';
   const insert = await fetcher(base + '?on_conflict=user_id', { method:'POST', headers:{...headers, Prefer:'resolution=ignore-duplicates,return=minimal'}, body:JSON.stringify({user_id:userId}), signal:AbortSignal.timeout(7500) });
   if (!insert.ok) throw Error('activation failed');
