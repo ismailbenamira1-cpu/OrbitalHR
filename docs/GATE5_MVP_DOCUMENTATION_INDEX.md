@@ -1,5 +1,10 @@
 # OrbitalHR — Gate 5 MVP Documentation Package and Deferred Work
 
+## Gate 5 final launch sign-off (16 November 2026)
+
+**Use [the evidence-based launch sign-off ledger](GATE5_LAUNCH_SIGNOFF_LEDGER.md) for operational closure.** It distinguishes fictional-only demonstrations, the live lead form (which collects business contact personal information), and real employee-data onboarding. Completed drafts do not constitute approvals; Gate 5 remains OPEN for identifiable employee onboarding.
+
+
 **Prepared:** 15 November 2026. **Stage:** Drafting complete / legal-operational acceptance outstanding.
 **Founder privacy contact:** ismailbenamira1@gmail.com
 **Legal operator:** [CURRENT LEGAL OPERATOR IDENTITY, SERVICE ADDRESS AND BUSINESS STATUS TO CONFIRM]. Future Ontario incorporation is not yet complete.
