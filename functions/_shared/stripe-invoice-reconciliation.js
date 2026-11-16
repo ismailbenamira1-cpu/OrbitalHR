@@ -7,7 +7,7 @@ export async function reconcileStripeInvoice(event,env,fetcher=fetch) {
  const id=event.data?.object?.id;
  const customer=event.data?.object?.customer;
  if(!valid(id,'in')||!valid(customer,'cus')) throw Error('Invalid event references');
- const dbHeaders={apikey:env.BILLING_STAGING_SERVICE_ROLE_KEY,Authorization:'Bearer '+env.BILLING_STAGING_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
+ const dbHeaders={apikey:env.BILLING_STAGING_SERVICE_ROLE_KEY,'Content-Type':'application/json'};
  async function json(url,options){const r=await fetcher(url,{...options,signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Upstream unavailable');return r.json();}
  async function row(table,filter){const rows=await json(STAGING+'/rest/v1/'+table+'?'+filter,{headers:dbHeaders});if(!Array.isArray(rows)||rows.length!==1)throw Error('Missing binding');return rows[0];}
  async function stripe(path){return json('https://api.stripe.com/v1/'+path,{headers:{Authorization:'Bearer '+env.STRIPE_SECRET_KEY,'Stripe-Version':'2024-10-28.acacia'}});}
