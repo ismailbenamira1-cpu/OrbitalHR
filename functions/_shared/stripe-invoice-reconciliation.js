@@ -1,3 +1,4 @@
+import {transitionFoundingPrice} from './founding-price-transition.js';
 import {validateAllocatedInvoice} from './allocated-invoice-validation.js';
 const STAGING='https://clijflnmtyqjexocbjqq.supabase.co';
 const valid=(id,prefix)=>typeof id==='string'&&new RegExp('^'+prefix+'_[A-Za-z0-9]+$').test(id);
@@ -23,5 +24,19 @@ export async function reconcileStripeInvoice(event,env,fetcher=fetch) {
  const args=validateAllocatedInvoice({account,attempt,session,subscription,invoice,line:invoice.lines?.data?.[0]});
  const result=await json(STAGING+'/rest/v1/rpc/apply_allocated_payment',{method:'POST',headers:dbHeaders,body:JSON.stringify({...args,p_event:event.id})});
  if(!['applied','duplicate','duplicate_invoice'].includes(result))throw Error('Unexpected reconciliation result');
+ // Run on duplicate delivery too: payment may have committed before a failed Stripe update.
+ if(account.offered_plan==='founding'){
+ const filter='user_id=eq.'+encodeURIComponent(account.user_id);
+ const paid=await json(STAGING+'/rest/v1/billing_paid_invoices?'+filter+'&price_plan=eq.founding&select=invoice_id,user_id,price_plan&limit=13',{headers:dbHeaders});
+ if(!Array.isArray(paid)||paid.length>12)throw Error('Unexpected founding invoice count');
+ if(paid.length===12){
+ const fresh=await row('billing_accounts',filter);
+ const current=await stripe('subscriptions/'+fresh.stripe_subscription_id);
+ if(current.cancel_at_period_end!==true){
+ if(env.BILLING_TRANSITION_TEST_ENABLED!=='true')throw Error('Price transition disabled');
+ await transitionFoundingPrice({account:fresh,paidInvoices:paid,subscription:current},env.STRIPE_SECRET_KEY,fetcher);
+ }
+ }
+ }
  return result;
 }
