@@ -3,7 +3,7 @@
 **Status:** Internal legal/technical review. Replace every [PLACEHOLDER] and validate actual practices before publication.
 
 ## 1. Who operates OrbitalHR
-OrbitalHR is an international HR compliance-screening software service currently operated by **Ismail Benamira, in an individual capacity**. OrbitalHR is the product name; no company incorporation has been confirmed. **Business/contact address: [TO CONFIRM — DO NOT ASSUME ONTARIO ADDRESS].** Do not represent a future corporation as the present operator.
+OrbitalHR is an international HR compliance-screening software service currently operated by **Ismail Benamira, in an individual capacity**. OrbitalHR is the product name; no company incorporation has been confirmed. **Correspondence address (founder-supplied; use/receipt not independently verified): 309 Richmond Rd, Ottawa, ON K1Z 6X6, Canada.** Do not represent a future corporation as the present operator.
 
 **Privacy Officer:** Founder (initial designation).  
 **Contact:** ismailbenamira1@gmail.com.  
