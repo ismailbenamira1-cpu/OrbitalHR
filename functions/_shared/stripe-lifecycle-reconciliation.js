@@ -30,7 +30,11 @@ export async function reconcileLifecycle(event,env,fetcher=fetch){
  // Re-fetch after capturing optimistic version; conservative hold on any refund/dispute.
  const latest=await stripe('charges/'+charge.id);
  if(latest.id!==charge.id||latest.customer!==customer||latest.livemode!==false)throw Error('Charge mismatch');
- if(latest.disputed===true||latest.amount_refunded>0)status='paused';
+ if(latest.disputed===true||latest.amount_refunded>0){
+ if(a.billing_hold===true)return 'already_suspended';
+ const result=await get(STAGING+'/rest/v1/rpc/hold_billing_access',{method:'POST',headers,body:JSON.stringify({p_user:a.user_id,p_subscription:sub,p_version:a.reconciliation_version})});
+ if(result!=='suspended')throw Error('Hold failed');return result;
+ }
  }
  if(!['past_due','unpaid','canceled','paused'].includes(status))return 'no_suspension';
  if(a.subscription_status===status&&a.paid_through===null)return 'already_suspended';
